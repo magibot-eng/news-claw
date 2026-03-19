@@ -14,8 +14,6 @@
     --card-bg: #1a1a2e;
     --text: #e8e8e8;
     --text-dim: #8888aa;
-    --hp-start: #ff4d4d;
-    --hp-end: #ffd700;
     --accent: #ffd700;
   }
 
@@ -33,6 +31,10 @@
     overflow: hidden;
     user-select: none;
   }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .screen.active { display: flex; }
 
   /* ─── TOP BAR ─── */
   .top-bar {
@@ -57,49 +59,169 @@
     white-space: nowrap;
   }
 
-  .refresh-hint {
-    font-size: 0.65rem;
-    letter-spacing: 2px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    opacity: 0.7;
-  }
-
-  /* ─── CATEGORY PILLS ─── */
-  .category-pills {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 14px 16px 10px;
-    flex-shrink: 0;
-  }
-
-  .cat-pill {
+  .back-btn {
     font-family: 'Cinzel', serif;
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
-    padding: 6px 14px;
+    padding: 6px 16px;
     border-radius: 20px;
-    border: 2px solid;
+    border: 2px solid var(--text-dim);
+    color: var(--text-dim);
+    background: transparent;
     cursor: pointer;
     transition: all 0.2s ease;
-    background: rgba(0,0,0,0.3);
-    opacity: 0.6;
     white-space: nowrap;
   }
 
-  .cat-pill.active {
-    opacity: 1;
-    box-shadow: 0 0 16px currentColor;
-    background: rgba(255,255,255,0.05);
+  .back-btn:hover {
+    border-color: var(--text);
+    color: var(--text);
+    transform: translateX(-3px);
   }
 
-  .cat-pill:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
+  /* ═══════════════════════════════════════════════════════
+     CATEGORY SELECT SCREEN
+  ═══════════════════════════════════════════════════════ */
+  #selectScreen {
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+    gap: 0;
+  }
+
+  .select-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 8px;
+    color: #fff;
+    text-shadow: 0 0 30px rgba(255,215,0,0.25);
+    letter-spacing: 3px;
+  }
+
+  .select-subtitle {
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 32px;
+    font-style: italic;
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .cat-card {
+    background: var(--card-bg);
+    border: 2px solid;
+    border-radius: 14px;
+    padding: 28px 20px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .cat-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .cat-card-emoji {
+    font-size: 3rem;
+    line-height: 1;
+    display: block;
+  }
+
+  .cat-card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .cat-card-desc {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .cat-card:hover {
+    transform: translateY(-8px) scale(1.04);
+  }
+
+  @keyframes catCardEntrance {
+    from { opacity: 0; transform: translateY(40px) scale(0.9); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     MAIN GAME SCREEN
+  ═══════════════════════════════════════════════════════ */
+
+  /* ─── CATEGORY HEADER ─── */
+  .cat-header {
+    text-align: center;
+    padding: 10px 16px 6px;
+    flex-shrink: 0;
+  }
+
+  .cat-header-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    opacity: 0.5;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .cat-header-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* ─── ARTICLES READ COUNTER ─── */
+  .counter-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px 4px;
+    flex-shrink: 0;
+  }
+
+  .articles-read-counter {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(0.9rem, 3vw, 1.1rem);
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(255,215,0,0.4);
+  }
+
+  .articles-read-counter span {
+    font-size: 1.2em;
+    margin-right: 4px;
   }
 
   /* ─── MAIN AREA ─── */
@@ -109,57 +231,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 10px 16px 0;
-    gap: 14px;
+    padding: 8px 16px 0;
+    gap: 12px;
     overflow: hidden;
-  }
-
-  /* ─── FRESHNESS BAR (BOSS HP) ─── */
-  .freshness-container {
-    width: 100%;
-    max-width: 480px;
-    flex-shrink: 0;
-  }
-
-  .freshness-label {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.65rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-  }
-
-  .freshness-track {
-    height: 16px;
-    background: rgba(255,255,255,0.07);
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.1);
-    cursor: pointer;
     position: relative;
-  }
-
-  .freshness-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--hp-start), var(--hp-end));
-    border-radius: 8px;
-    transition: width 2s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-  }
-
-  .freshness-fill::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 60%);
-    border-radius: 8px;
-  }
-
-  .freshness-track:hover .freshness-fill {
-    filter: brightness(1.2);
   }
 
   /* ─── DIALOGUE BOX ─── */
@@ -176,6 +251,7 @@
     max-height: 220px;
     overflow-y: auto;
     box-shadow: inset 0 2px 12px rgba(0,0,0,0.4);
+    transition: opacity 0.3s ease;
   }
 
   .dialogue-box::before {
@@ -210,9 +286,7 @@
     text-decoration: underline;
   }
 
-  .dialogue-time {
-    opacity: 0.5;
-  }
+  .dialogue-time { opacity: 0.5; }
 
   .dialogue-text {
     font-size: clamp(0.95rem, 2.5vw, 1.1rem);
@@ -244,12 +318,22 @@
     opacity: 0.7;
   }
 
+  /* Cards dimmed when summary is showing */
+  .hand-area.dimmed .cards .card {
+    opacity: 0.25;
+    pointer-events: none;
+  }
+  .hand-area.dimmed .hand-label {
+    opacity: 0.25;
+  }
+
   /* ─── CARD HAND ─── */
   .hand-area {
     flex-shrink: 0;
     padding: 14px 10px 28px;
     background: linear-gradient(0deg, rgba(0,0,0,0.65) 0%, transparent 80%);
     width: 100%;
+    transition: opacity 0.3s ease;
   }
 
   .hand-label {
@@ -261,6 +345,7 @@
     color: var(--text-dim);
     margin-bottom: 12px;
     opacity: 0.6;
+    transition: opacity 0.3s ease;
   }
 
   .cards {
@@ -279,7 +364,7 @@
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.3s ease;
     opacity: 0;
     transform: translateX(70px);
     flex-shrink: 0;
@@ -371,15 +456,6 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* Freshness pulse on tap */
-  .freshness-fill.pulse {
-    animation: freshPulse 0.5s ease;
-  }
-  @keyframes freshPulse {
-    0%, 100% { filter: brightness(1); }
-    50% { filter: brightness(2.2); }
-  }
-
   /* Loading shimmer on cards */
   .card.loading {
     animation: shimmer 1.2s ease infinite;
@@ -399,6 +475,9 @@
     .dialogue-box { padding: 16px 18px; max-height: 180px; }
     .top-bar { padding: 12px 16px; }
     .game-title { font-size: 1.1rem; letter-spacing: 2px; }
+    .category-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    .cat-card { padding: 22px 16px; }
+    .cat-card-emoji { font-size: 2.5rem; }
   }
 
   @media (max-width: 480px) {
@@ -417,57 +496,72 @@
 </head>
 <body>
 
-<!-- TOP BAR -->
+<!-- TOP BAR (shown on both screens) -->
 <div class="top-bar">
   <div class="game-title">📰 NEWS QUEST</div>
-  <div class="refresh-hint">TAP BAR TO REFRESH</div>
+  <button class="back-btn" id="backBtn" style="display:none;">← Back to Categories</button>
 </div>
 
-<!-- CATEGORY PILLS -->
-<div class="category-pills" id="categoryPills"></div>
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN 1: CATEGORY SELECT
+═══════════════════════════════════════════════════════ -->
+<div class="screen active" id="selectScreen">
+  <div class="select-title">Choose Your Quest</div>
+  <div class="select-subtitle">Pick a category to begin your news adventure</div>
+  <div class="category-grid" id="categoryGrid"></div>
+</div>
 
-<!-- MAIN AREA -->
-<div class="main-area">
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN 2: MAIN GAME
+═══════════════════════════════════════════════════════ -->
+<div class="screen" id="mainScreen">
 
-  <!-- FRESHNESS BAR -->
-  <div class="freshness-container">
-    <div class="freshness-label">
-      <span>📰 NEWS FRESHNESS</span>
-      <span id="freshnessPct">100%</span>
-    </div>
-    <div class="freshness-track" id="freshnessTrack" title="Click to refresh">
-      <div class="freshness-fill" id="freshnessFill" style="width: 100%"></div>
+  <!-- Category name in header -->
+  <div class="cat-header">
+    <div class="cat-header-label">Currently Reading</div>
+    <div class="cat-header-name" id="catHeaderName"></div>
+  </div>
+
+  <!-- Articles Read Counter -->
+  <div class="counter-container">
+    <div class="articles-read-counter">
+      <span>📰</span> Articles Read: <span id="articlesReadCount">0</span>
     </div>
   </div>
 
-  <!-- DIALOGUE BOX -->
-  <div class="dialogue-box" id="dialogueBox">
-    <div class="dialogue-placeholder" id="dialoguePlaceholder">
-      Pick a card to read the latest news...
+  <!-- MAIN AREA -->
+  <div class="main-area">
+
+    <!-- DIALOGUE BOX -->
+    <div class="dialogue-box" id="dialogueBox">
+      <div class="dialogue-placeholder" id="dialoguePlaceholder">
+        Pick a card to read the latest news...
+      </div>
+      <div id="dialogueContent" style="display:none;">
+        <div class="dialogue-source" id="dialogueSource"></div>
+        <div class="dialogue-text" id="dialogueText"></div>
+      </div>
     </div>
-    <div id="dialogueContent" style="display:none;">
-      <div class="dialogue-source" id="dialogueSource"></div>
-      <div class="dialogue-text" id="dialogueText"></div>
-    </div>
+
   </div>
 
-</div>
+  <!-- CARD HAND -->
+  <div class="hand-area" id="handArea">
+    <div class="hand-label">— CHOOSE YOUR CARD —</div>
+    <div class="cards" id="cards"></div>
+  </div>
 
-<!-- CARD HAND -->
-<div class="hand-area">
-  <div class="hand-label">— CHOOSE YOUR CARD —</div>
-  <div class="cards" id="cards"></div>
 </div>
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
-let selectedCategory = 1;
+let articlesRead = 0;
+let selectedCategory = null; // null on select screen
+let currentCategoryId = null;
 let newsPool = [];
 let poolIndex = 0;
 let isAnimating = false;
-let freshness = 100; // %
-let pillEls = {}; // catId → DOM element
-let refreshTime = Date.now(); // when bar was last reset
+let pillEls = {}; // catId → DOM element (not used on main screen, but keep for compat)
 
 const CATEGORY_COLORS = {
   1: '#00d4ff', // Tech
@@ -477,71 +571,85 @@ const CATEGORY_COLORS = {
   5: '#9b59b6', // Science
 };
 
+const CATEGORY_DESCS = {
+  1: 'AI breakthroughs, gadgets, and the future of tech',
+  2: 'Global events shaping our world today',
+  3: 'Markets, companies, and the economy',
+  4: 'Scores, trades, and athletic triumphs',
+  5: 'Discoveries, medicine, and the cosmos',
+};
+
+// ─── SCREEN MANAGEMENT ────────────────────────────────────────────────────────
+function showSelectScreen() {
+  document.getElementById('selectScreen').classList.add('active');
+  document.getElementById('mainScreen').classList.remove('active');
+  document.getElementById('backBtn').style.display = 'none';
+}
+
+function showMainScreen(catId) {
+  document.getElementById('selectScreen').classList.remove('active');
+  document.getElementById('mainScreen').classList.add('active');
+  document.getElementById('backBtn').style.display = '';
+  document.getElementById('backBtn').style.borderColor = CATEGORY_COLORS[catId];
+  document.getElementById('backBtn').style.color = CATEGORY_COLORS[catId];
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 async function init() {
   await loadCategories();
-  await selectCategory(1);
-  startFreshnessTimer();
-}
-
-// ─── FRESHNESS TIMER ─────────────────────────────────────────────────────────
-// Freshness depletes from 100% → 0% over 24 hours (linear for MVP)
-function startFreshnessTimer() {
-  refreshTime = Date.now();
-  const depleteInterval = setInterval(() => {
-    const elapsed = Date.now() - refreshTime;
-    const total = 24 * 60 * 60 * 1000; // 24h in ms
-    freshness = Math.max(0, Math.round(100 - (elapsed / total) * 100));
-    document.getElementById('freshnessFill').style.width = freshness + '%';
-    document.getElementById('freshnessPct').textContent = freshness + '%';
-  }, 60000); // update every minute
-  window._freshnessInterval = depleteInterval;
-}
-
-// Reset freshness bar (simulate refresh)
-function resetFreshness() {
-  freshness = 100;
-  refreshTime = Date.now();
-  const fill = document.getElementById('freshnessFill');
-  fill.classList.add('pulse');
-  setTimeout(() => fill.classList.remove('pulse'), 500);
-  document.getElementById('freshnessFill').style.width = '100%';
-  document.getElementById('freshnessPct').textContent = '100%';
 }
 
 // ─── CATEGORIES ───────────────────────────────────────────────────────────────
 async function loadCategories() {
   const res = await fetch('/api/categories');
   const cats = await res.json();
-  const pillsEl = document.getElementById('categoryPills');
-  pillsEl.innerHTML = '';
+  const gridEl = document.getElementById('categoryGrid');
+  gridEl.innerHTML = '';
 
-  cats.forEach(cat => {
-    const pill = document.createElement('button');
-    pill.className = 'cat-pill' + (cat.id === selectedCategory ? ' active' : '');
-    pill.style.borderColor = cat.color;
-    pill.style.color = cat.color;
-    pill.textContent = cat.emoji + ' ' + cat.name;
-    pill.addEventListener('click', () => selectCategory(cat.id));
-    pillsEl.appendChild(pill);
-    pillEls[cat.id] = pill;
+  cats.forEach((cat, i) => {
+    const card = document.createElement('div');
+    card.className = 'cat-card';
+    card.style.borderColor = cat.color;
+    card.style.boxShadow = `0 0 18px ${cat.color}33`;
+    card.style.animation = `catCardEntrance 0.5s cubic-bezier(0.22,1,0.36,1) forwards`;
+    card.style.animationDelay = `${i * 100 + 100}ms`;
+    card.style.opacity = '0';
+
+    card.innerHTML = `
+      <span class="cat-card-emoji">${cat.emoji}</span>
+      <span class="cat-card-name">${cat.name}</span>
+      <span class="cat-card-desc">${CATEGORY_DESCS[cat.id]}</span>
+    `;
+
+    card.addEventListener('click', () => enterCategory(cat.id, cat.name, cat.color));
+    gridEl.appendChild(card);
   });
 }
 
-async function selectCategory(catId) {
-  if (isAnimating) return;
+async function enterCategory(catId, catName, catColor) {
+  // Reset state
+  articlesRead = 0;
+  currentCategoryId = catId;
   selectedCategory = catId;
-  isAnimating = true;
+  newsPool = [];
+  poolIndex = 0;
+  isAnimating = false;
 
-  // Update pill active state
-  Object.keys(pillEls).forEach(id => {
-    pillEls[id].classList.toggle('active', parseInt(id) === catId);
-  });
+  // Update counter
+  document.getElementById('articlesReadCount').textContent = '0';
 
-  // Clear current cards
-  const cardsEl = document.getElementById('cards');
-  cardsEl.innerHTML = '';
+  // Update category header
+  const headerName = document.getElementById('catHeaderName');
+  headerName.textContent = '📰 ' + catName;
+  headerName.style.color = catColor;
+
+  // Clear cards and dialogue
+  document.getElementById('cards').innerHTML = '';
   clearDialogue();
+  document.getElementById('handArea').classList.remove('dimmed');
+
+  // Switch screen
+  showMainScreen(catId);
 
   // Fetch news
   try {
@@ -550,13 +658,32 @@ async function selectCategory(catId) {
     poolIndex = 0;
   } catch(e) {
     console.error('Failed to load news', e);
-    isAnimating = false;
     return;
   }
 
-  isAnimating = false;
   showNextCards();
 }
+
+// ─── BACK BUTTON ──────────────────────────────────────────────────────────────
+document.getElementById('backBtn').addEventListener('click', () => {
+  if (isAnimating) return;
+  // Reset everything and go back to select screen
+  articlesRead = 0;
+  selectedCategory = null;
+  currentCategoryId = null;
+  newsPool = [];
+  poolIndex = 0;
+  isAnimating = false;
+  clearDialogue();
+  showSelectScreen();
+  // Re-trigger cat card animations on return
+  document.querySelectorAll('.cat-card').forEach((card, i) => {
+    card.style.animation = 'none';
+    card.offsetHeight; // reflow
+    card.style.animation = `catCardEntrance 0.5s cubic-bezier(0.22,1,0.36,1) forwards`;
+    card.style.animationDelay = `${i * 80}ms`;
+  });
+});
 
 // ─── CARDS ────────────────────────────────────────────────────────────────────
 function showNextCards() {
@@ -565,12 +692,13 @@ function showNextCards() {
   if (batch.length === 0) return;
 
   cardsEl.innerHTML = '';
+  const color = CATEGORY_COLORS[currentCategoryId];
 
   batch.forEach((article, i) => {
     const card = document.createElement('div');
     card.className = 'card';
-    card.style.borderColor = CATEGORY_COLORS[selectedCategory];
-    card.style.boxShadow = `0 0 12px ${CATEGORY_COLORS[selectedCategory]}22`;
+    card.style.borderColor = color;
+    card.style.boxShadow = `0 0 12px ${color}22`;
     card.style.animationDelay = `${i * 130 + 100}ms`;
 
     card.innerHTML = `
@@ -592,17 +720,19 @@ function handleCardClick(cardEl, article) {
   if (isAnimating) return;
   isAnimating = true;
 
-  const color = CATEGORY_COLORS[selectedCategory];
+  const color = CATEGORY_COLORS[currentCategoryId];
   const rect = cardEl.getBoundingClientRect();
 
-  // Dismiss other cards
+  // Dim other cards
   document.querySelectorAll('.card').forEach(c => {
     if (c !== cardEl) {
-      c.style.transition = 'opacity 0.2s, transform 0.2s';
-      c.style.opacity = '0';
-      c.style.transform = 'scale(0.75)';
+      c.style.transition = 'opacity 0.2s';
+      c.style.opacity = '0.15';
     }
   });
+
+  // Dim the hand area label
+  document.getElementById('handArea').classList.add('dimmed');
 
   // Fly card to center
   cardEl.classList.add('flying');
@@ -622,18 +752,36 @@ function handleCardClick(cardEl, article) {
 
     // Show summary
     showSummary(article);
-    isAnimating = false;
+
+    // Increment counter
+    articlesRead++;
+    document.getElementById('articlesReadCount').textContent = articlesRead;
+
     poolIndex += 3;
 
     // Load next cards after short delay
     setTimeout(() => {
       if (poolIndex >= newsPool.length) {
-        selectCategory(selectedCategory); // re-fetch when pool exhausted
+        // Re-fetch when pool exhausted
+        fetchNewPool();
       } else {
         showNextCards();
       }
     }, 1200);
   }, 480);
+}
+
+async function fetchNewPool() {
+  isAnimating = true;
+  try {
+    const res = await fetch(`/api/news/${currentCategoryId}`);
+    newsPool = await res.json();
+    poolIndex = 0;
+  } catch(e) {
+    console.error('Failed to refresh news', e);
+  }
+  isAnimating = false;
+  showNextCards();
 }
 
 // ─── DIALOGUE ─────────────────────────────────────────────────────────────────
@@ -651,8 +799,9 @@ async function showSummary(article) {
   placeholder.style.display = 'none';
   content.style.display = 'block';
 
+  const color = CATEGORY_COLORS[currentCategoryId];
   sourceEl.innerHTML = `
-    <span style="color: ${CATEGORY_COLORS[selectedCategory]}">${article.source}</span>
+    <span style="color: ${color}">${article.source}</span>
     &nbsp;·&nbsp; <span class="dialogue-time">${article.time}</span>
     &nbsp;·&nbsp; <a href="${article.url}" target="_blank" rel="noopener">Read Full Article →</a>
   `;
@@ -662,12 +811,22 @@ async function showSummary(article) {
   dialogueBox.classList.add('fade-in');
 
   // Typewriter text
-  const summaryRes = await fetch(`/api/summary/${article.id}`);
-  const summaryData = await summaryRes.json();
+  let summaryData;
+  try {
+    const res = await fetch(`/api/summary/${article.id}`);
+    summaryData = await res.json();
+  } catch(e) {
+    textEl.innerHTML = '<em>Failed to load summary. Click a card to try again.</em>';
+    dialogueBox.classList.remove('fade-in');
+    isAnimating = false;
+    return;
+  }
+
   await typewriterEffect(textEl, summaryData.summary);
 
   await sleep(100);
   dialogueBox.classList.remove('fade-in');
+  isAnimating = false;
 }
 
 async function typewriterEffect(el, text) {
@@ -676,13 +835,11 @@ async function typewriterEffect(el, text) {
   cursor.className = 'cursor';
   el.appendChild(cursor);
 
-  // Parse \n into <br> during typing
   const segments = text.split('\n');
 
   for (let s = 0; s < segments.length; s++) {
     const chars = segments[s].split('');
     for (let i = 0; i < chars.length; i++) {
-      // Insert before cursor
       el.insertBefore(document.createTextNode(chars[i]), cursor);
       await sleep(14 + Math.random() * 8);
     }
@@ -693,7 +850,6 @@ async function typewriterEffect(el, text) {
     }
   }
 
-  // Remove cursor when done
   await sleep(600);
   cursor.remove();
 }
@@ -708,17 +864,17 @@ function clearDialogue() {
   content.style.display = 'none';
   textEl.innerHTML = '';
   dialogueBox.classList.remove('fade-in', 'fade-out');
+
+  // Restore card opacities
+  document.querySelectorAll('.card').forEach(c => {
+    c.style.opacity = '';
+  });
+  document.getElementById('handArea').classList.remove('dimmed');
 }
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-// ─── REFRESH ──────────────────────────────────────────────────────────────────
-document.getElementById('freshnessTrack').addEventListener('click', async () => {
-  resetFreshness();
-  await selectCategory(selectedCategory);
-});
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
 init();
