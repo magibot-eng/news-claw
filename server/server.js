@@ -10,15 +10,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── CATEGORIES ───────────────────────────────────────────────────────────
 const categories = [
-  { id: 1, name: 'Tech',     emoji: '💻', color: '#00d4ff' },
-  { id: 2, name: 'World',    emoji: '🌍', color: '#ff6b6b' },
-  { id: 3, name: 'Business', emoji: '💼', color: '#ffd700' },
-  { id: 4, name: 'Sports',   emoji: '⚽', color: '#2ecc71' },
-  { id: 5, name: 'Science',  emoji: '🔬', color: '#9b59b6' },
+  { id: 1, name: 'Tech',         emoji: '💻', color: '#00d4ff' },
+  { id: 2, name: 'World',        emoji: '🌍', color: '#ff6b6b' },
+  { id: 3, name: 'Business',     emoji: '💼', color: '#ffd700' },
+  { id: 4, name: 'Sports',       emoji: '⚽', color: '#2ecc71' },
+  { id: 5, name: 'Science',      emoji: '🔬', color: '#9b59b6' },
+  { id: 6, name: 'Entertainment', emoji: '🎬', color: '#e91e63' },
 ];
 
 // ─── MOCK NEWS DATA ─────────────────────────────────────────────────────────
-// Realistic, interesting headlines from late March 2026
+// 3 articles per category — realistic headlines from late March 2026
 const mockNews = {
   1: [ // Tech
     {
@@ -44,30 +45,6 @@ const mockNews = {
       source: 'Ars Technica',
       time: '6h ago',
       url: 'https://arstechnica.com'
-    },
-    {
-      id: 't4',
-      headline: 'Google DeepMind\'s AlphaFold 3 Cracks Protein-Drug Interaction',
-      teaser: 'Researchers can now predict how potential medicines bind to proteins with near-perfect accuracy, dramatically accelerating drug discovery.',
-      source: 'MIT Technology Review',
-      time: '8h ago',
-      url: 'https://technologyreview.com'
-    },
-    {
-      id: 't5',
-      headline: 'Tesla Robotaxi Fleet Begins Driverless Rides in Austin',
-      teaser: 'The Austin pilot zone covers 50 square miles with 200 vehicles. Musk calls it "the beginning of the end for car ownership."',
-      source: 'Electrek',
-      time: '10h ago',
-      url: 'https://electrek.co'
-    },
-    {
-      id: 't6',
-      headline: 'Meta Releases Open-Source Llama 4 with 1 Trillion Parameters',
-      teaser: 'The largest open-weight model to date matches GPT-5 on most benchmarks and runs on consumer hardware with quantized versions.',
-      source: 'TechCrunch',
-      time: '12h ago',
-      url: 'https://techcrunch.com'
     },
   ],
   2: [ // World
@@ -95,30 +72,6 @@ const mockNews = {
       time: '7h ago',
       url: 'https://www.ft.com'
     },
-    {
-      id: 'w4',
-      headline: 'India Surpasses China as World\'s Largest Economy by PPP',
-      teaser: 'IMF data confirms India\'s purchasing power parity GDP crossed $23 trillion, edging past China for the first time in modern history.',
-      source: 'The Economist',
-      time: '9h ago',
-      url: 'https://www.economist.com'
-    },
-    {
-      id: 'w5',
-      headline: 'Ukraine Reconstruction Bonds Raise $50B at Record Low Rates',
-      teaser: 'Global investors show unprecedented confidence in Ukraine\'s recovery, with bonds oversubscribed 4x at near-zero yields.',
-      source: 'Bloomberg',
-      time: '11h ago',
-      url: 'https://www.bloomberg.com'
-    },
-    {
-      id: 'w6',
-      headline: 'Arctic Sea Ice Hits Record Low for March Third Year Running',
-      teaser: 'Scientists warn the Arctic may see its first ice-free summer by 2030 as polar temperatures continue to rise at twice the global average.',
-      source: 'The Guardian',
-      time: '14h ago',
-      url: 'https://www.theguardian.com'
-    },
   ],
   3: [ // Business
     {
@@ -144,30 +97,6 @@ const mockNews = {
       source: 'CNBC',
       time: '5h ago',
       url: 'https://www.cnbc.com'
-    },
-    {
-      id: 'b4',
-      headline: 'TikTok US Revenue Hits $50B, Surpassing YouTube and Netflix',
-      teaser: 'ByteDance\'s ad revenue in the US grew 60% YoY, driven by live shopping features that generated $12B in Q1 alone.',
-      source: 'Business Insider',
-      time: '8h ago',
-      url: 'https://www.businessinsider.com'
-    },
-    {
-      id: 'b5',
-      headline: 'Startup Unicorn Retro Biosciences Valued at $5B After Series C',
-      teaser: 'The longevity startup, founded by Sam Altman, announces results from its senolytics human trial showing 25% reduction in biological age markers.',
-      source: 'Forbes',
-      time: '10h ago',
-      url: 'https://www.forbes.com'
-    },
-    {
-      id: 'b6',
-      headline: 'Walmart Announces Plan to Replace 30% of Store Staff with Robots',
-      teaser: 'The retail giant will deploy autonomous restocking and checkout systems across 2,000 US locations by end of 2027.',
-      source: 'Associated Press',
-      time: '13h ago',
-      url: 'https://apnews.com'
     },
   ],
   4: [ // Sports
@@ -195,30 +124,6 @@ const mockNews = {
       time: '6h ago',
       url: 'https://www.motorsport.com'
     },
-    {
-      id: 's4',
-      headline: 'Olympics 2028: Los Angeles Adds Breakdancing and Flag Football',
-      teaser: 'The LA28 organizing committee confirms the return of some skateboarding events and introduces two new sports targeting Gen Z viewers.',
-      source: 'Sports Illustrated',
-      time: '9h ago',
-      url: 'https://www.si.com'
-    },
-    {
-      id: 's5',
-      headline: 'Tennis: Jannik Sinner Receives 6-Month Doping Suspension',
-      teaser: 'The world No. 1 accepted a reduced ban after trace amounts of a prohibited substance were found in a contaminated supplement.',
-      source: 'BBC Sport',
-      time: '11h ago',
-      url: 'https://www.bbc.com/sport'
-    },
-    {
-      id: 's6',
-      headline: 'NFL Draft: Travis Hunter Selected First Overall by Jacksonville',
-      teaser: 'The two-way Heisman winner goes to the Jaguars, who traded up with Cleveland to secure the most versatile athlete in draft history.',
-      source: 'NFL.com',
-      time: '14h ago',
-      url: 'https://www.nfl.com/news'
-    },
   ],
   5: [ // Science
     {
@@ -245,29 +150,31 @@ const mockNews = {
       time: '8h ago',
       url: 'https://www.nejm.org'
     },
+  ],
+  6: [ // Entertainment
     {
-      id: 'sc4',
-      headline: 'Quantum Computer Achieves Error Correction Threshold',
-      teaser: 'Google\'s Willow-2 chip demonstrated fault-tolerant quantum computing for the first time, running for 10 minutes without a single uncorrected error.',
-      source: 'Science Magazine',
-      time: '10h ago',
-      url: 'https://www.science.org'
+      id: 'e1',
+      headline: 'Christopher Nolan\'s "Odyssey" Grosses $1.2B in Opening Weekend',
+      teaser: 'The Homer\'s Odyssey adaptation, shot entirely on IMAX cameras in 12 countries, has shattered box office records for a non-franchise film.',
+      source: 'Variety',
+      time: '1h ago',
+      url: 'https://variety.com'
     },
     {
-      id: 'sc5',
-      headline: 'Microplastics Found in Previously Pristine Deep Ocean Trenches',
-      teaser: 'Researchers discovered plastic fragments in the Mariana Trench at depths previously thought to be too remote for human contamination.',
-      source: 'Nature Geoscience',
-      time: '12h ago',
-      url: 'https://www.nature.com/natgeoscience'
+      id: 'e2',
+      headline: 'Taylor Swift Announces 5-Night Vancouver Stand in "Eras X" Tour',
+      teaser: 'The final leg of the record-breaking Eras Tour adds five new shows at BC Place, with a never-before-performed acoustic set each night.',
+      source: 'Rolling Stone',
+      time: '3h ago',
+      url: 'https://rollingstone.com'
     },
     {
-      id: 'sc6',
-      headline: 'New Alzheimer\'s Drug Shows 40% Slowing of Cognitive Decline',
-      teaser: 'Eli Lilly\'s donanemab follow-on drug, remternetug, showed dramatic results in Phase 3 trials with minimal amyloid-related imaging abnormalities.',
-      source: 'The Lancet',
-      time: '15h ago',
-      url: 'https://www.thelancet.com'
+      id: 'e3',
+      headline: '"The Last of Us" Season 2 Breaks HBO Viewership Records Again',
+      teaser: 'Episode 3 drew 42 million concurrent viewers, making HBO\'s most-watched series ever. Season 3 has already been greenlit.',
+      source: 'The Hollywood Reporter',
+      time: '5h ago',
+      url: 'https://hollywoodreporter.com'
     },
   ],
 };
@@ -286,18 +193,6 @@ const summaries = {
     summary: 'SpaceX achieved a historic milestone today when Starship Serial 15 completed the first full orbital mission. Launching at 6:00 AM CST from Starbase, Texas, the 400-foot rocket executed a nominal ascent, deployed three dummy Starlink satellites in low Earth orbit, performed a deorbit burn, and landed vertically at the original launch site — all within 90 minutes.\n\n"This is the moment space travel changes forever," Musk said at the post-flight press conference. "A fully reusable orbital class vehicle that can fly multiple times per day." Starship is now certified for commercial payload missions, with NASA\'s Artemis lunar lander contract secured for 2027.\n\nThe FAA has already issued a commercial launch license for the next Starship flight, scheduled in two weeks, which will attempt to catch the Super Heavy booster with the mechazilla tower arms.',
     url: 'https://arstechnica.com'
   },
-  t4: {
-    summary: 'Google DeepMind published results in Nature showing AlphaFold 3 can predict how drug molecules bind to target proteins with 94% accuracy — a critical step in computational drug design. The model was trained on a dataset of 10 million protein-ligand complexes, five times larger than AlphaFold 2\'s training set.\n\nResearchers at University of California San Francisco used AlphaFold 3 to identify a novel binding site on the KRAS oncogene, a historically "undruggable" target implicated in 30% of all cancers. A candidate drug is now in preclinical trials.\n\n"This changes the economics of drug discovery fundamentally," said DeepMind CEO Demis Hassabis. "What used to take years and hundreds of millions of dollars can now be done in weeks on a single GPU."',
-    url: 'https://technologyreview.com'
-  },
-  t5: {
-    summary: 'Tesla officially launched its robotaxi service in Austin today, marking the first time a major automaker has deployed fully driverless vehicles for public rides in the US. The service, branded "Cybercab," operates 200 vehicles within a 50-square-mile zone covering downtown, the airport, and major tech campuses.\n\nRiders request a ride through the Tesla app, and a Cybercab arrives within 5-10 minutes. The company says fares are 40% cheaper than Uber\'s equivalent rides. Safety drivers were present in the first 10 vehicles during the pilot, but those have now been removed after the Austin city council approved the commercial license.\n\nCEO Elon Musk said the Austin launch is "just the beginning," with Los Angeles, Miami, and Dallas planned for Q3 2026.',
-    url: 'https://electrek.co'
-  },
-  t6: {
-    summary: 'Meta released Llama 4 over the weekend with model sizes ranging from 8B to an unprecedented 1 trillion parameters. The flagship model, Llama 4-Ultra, matches or exceeds GPT-5 on 18 of 23 industry benchmarks, according to Meta\'s technical report.\n\nThe most significant development is that Meta is releasing the weights under a permissive commercial license, allowing any company to fine-tune and deploy the model without royalty fees. Quantized versions run at fp16 on consumer GPUs with 24GB VRAM.\n\n"Open source AI is now ahead of closed models," said Chief Scientist Yann LeCun. "This is the final nail in the closed AI coffin." Llama 4 is available immediately through Meta\'s API and as a HuggingFace download.',
-    url: 'https://techcrunch.com'
-  },
   w1: {
     summary: 'G7 leaders meeting in Tokyo signed the world\'s first binding international treaty on artificial intelligence governance. The accord, called the "Tokyo AI Framework," creates three tiers of AI systems: unrestricted, regulated, and prohibited.\n\nMilitary AI systems that make lethal autonomous decisions are classified as prohibited. Deepfakes in political advertising and AI-generated content used for mass manipulation are also banned. Tech companies with AI systems used by more than 10 million people must submit to annual audits.\n\nThe treaty has binding enforcement mechanisms including trade sanctions for non-compliant nations. China was invited as an observer but did not sign. US President signed with caveats, noting the framework "preserves American AI leadership while addressing legitimate harms."',
     url: 'https://www.reuters.com'
@@ -309,18 +204,6 @@ const summaries = {
   w3: {
     summary: 'The European Parliament voted 521-38 to pass the Markets in Crypto-Assets Regulation II, the most comprehensive cryptocurrency legislation ever enacted. The law requires stablecoin issuers like Tether and Circle to maintain 1:1 reserves held in EU-regulated banks, and mandates quarterly audits.\n\nAlgorithmic stablecoins — tokens that maintain value through algorithms rather than reserves — are banned entirely, effective immediately. The EU also established a new European Crypto-Assets Authority (ECAA) to oversee digital asset markets.\n\nIndustry groups warned the regulation could push stablecoin activity offshore, while financial regulators hailed it as finally bringing "the same rigor to crypto as to equities and bonds." The law takes effect in January 2027.',
     url: 'https://www.ft.com'
-  },
-  w4: {
-    summary: 'The International Monetary Fund\'s latest World Economic Outlook update places India\'s purchasing power parity GDP at $23.1 trillion, surpassing China\'s $22.9 trillion for the first time. This makes India the world\'s largest economy by PPP — a metric economists use to compare living standards across countries.\n\nIndia\'s economy grew 8.4% in FY2025-26, driven by a domestic consumption boom, record-high manufacturing investment, and a services sector that now employs 35 million people. India\'s median age of 28 compared to China\'s 40 also signals decades of demographic dividend ahead.\n\nNominal GDP — the metric most used for market size — still shows China at $18.2 trillion vs India\'s $4.1 trillion, so the PPP milestone is symbolic but signals a profound demographic and economic shift.',
-    url: 'https://www.economist.com'
-  },
-  w5: {
-    summary: 'Ukraine successfully issued $50 billion in reconstruction bonds at a remarkable 0.8% yield — a rate typically reserved for Germany and the US. The bonds, denominated in euros, dollars, and a new Ukraine-hryvnia hybrid, were oversubscribed 4.2x, attracting $210 billion in orders.\n\nThe European Union guaranteed 60% of the bonds, with the US, UK, and Japan providing political risk insurance for the remainder. Proceeds will fund infrastructure reconstruction in six priority sectors: energy grids, railways, port modernization, housing, water systems, and telecommunications.\n\n"This is a vote of confidence in Ukraine\'s future," said Ukrainian Finance Minister. "Investors are saying Ukraine will win, Ukraine will rebuild, and Ukraine will be integrated into Europe."',
-    url: 'https://www.bloomberg.com'
-  },
-  w6: {
-    summary: 'Scientists from the Alfred Wegener Institute reported that Arctic sea ice extent in March 2026 hit a record low for the third consecutive year, measuring just 13.4 million square kilometers — 1.2 million below the previous record and 2.8 million below the 1981-2010 average.\n\nOcean heat content in the Arctic was measured at 400% above 1990 levels, and the Greenland Ice Sheet experienced its earliest melt onset date ever recorded — February 28th. Permafrost thaw is releasing methane at rates 30% above previous projections.\n\n"We are tracking toward an ice-free September in the early 2030s," said lead researcher Dr. Heike Lange. "Once the summer ice is gone, the Arctic will warm at twice the current rate, accelerating impacts globally."',
-    url: 'https://www.theguardian.com'
   },
   b1: {
     summary: 'The Federal Reserve held its benchmark interest rate at 4.25-4.50% for the third consecutive meeting, but Chair Jerome Powell\'s press conference signaled a pivot. "The committee is increasingly confident that inflation is moving sustainably toward our 2% target," Powell said.\n\nFed projections now show two quarter-point cuts in Q3 and Q4 2026, bringing rates to 3.75-4.00% by year-end. Markets had priced in just one cut, so the dovish surprise sent equities surging. The S&P 500 gained 1.8% in after-hours trading, while the 10-year Treasury yield fell 12 basis points.\n\nPowell emphasized the labor market remains "solid without being overheated," with unemployment at 4.1% and wage growth at 3.2% — both consistent with a soft landing.',
@@ -334,18 +217,6 @@ const summaries = {
     summary: 'Amazon announced it has re-acquired Whole Foods Market from Apollo Global Management for $14.2 billion, reversing the 2025 spin-off that saw Apollo take the grocery chain private. The buyback price represents a 15% premium to Apollo\'s last valuation.\n\nThe reversal comes as Amazon seeks to re-accelerate its physical retail presence. CEO Andy Jassy said Amazon will invest $8 billion over three years to remodel Whole Foods stores with "Just Walk Out" technology and drone delivery capabilities.\n\nWhole Foods, which operates 530 stores, will become the anchor of Amazon\'s grocery strategy alongside its Amazon Fresh chain, which the company has said will also be absorbed into the Whole Foods brand.',
     url: 'https://www.cnbc.com'
   },
-  b4: {
-    summary: 'TikTok\'s US advertising revenue reached $50.4 billion in 2025, surpassing YouTube\'s $42.8B and Netflix\'s $38.2B for the first time, according to figures shared by ByteDance ahead of its IPO filing. The growth was driven primarily by live shopping features, which generated $12.1B in Q1 2026 alone.\n\nTikTok Shop, which allows users to buy products directly within the app, has grown to 80 million monthly active buyers in the US — up from 20 million in early 2025. The average order value of $78 is nearly double that of Amazon.\n\nByteDance is rumored to be targeting a $300 billion valuation in its upcoming IPO, with SoftBank and Sequoia as anchor investors.',
-    url: 'https://www.businessinsider.com'
-  },
-  b5: {
-    summary: 'Longevity startup Retro Biosciences, founded with $500M from Sam Altman, announced a $2B Series C at a $5B valuation. The round was led by Founders Fund and Sequoia Capital.\n\nThe company published results from its 200-person senolytics trial showing participants who received a combination of dasatinib and quercetin, plus a proprietary fibroblast growth factor cocktail, showed a 25% reduction in epigenetic age markers measured by Horvath\'s clock.\n\n"What we\'re seeing is not just slowing aging — we\'re seeing biological age reversal," said CEO Sam Altman. "We believe 20 years of healthy life extension is achievable within this decade." Phase 3 trials are planned for 2027 across 15 sites in 6 countries.',
-    url: 'https://www.forbes.com'
-  },
-  b6: {
-    summary: 'Walmart unveiled its "Project Atlas" plan to deploy autonomous systems across 2,000 US locations by the end of 2027, potentially replacing 30% of its store workforce. The $18B initiative includes robotic stockers, AI-powered checkout systems, and autonomous delivery robots for online orders.\n\nThe announcement sent Walmart shares up 4% but drew immediate criticism from labor unions. UFCW president Chelsea Harrison called it "the largest retail layoff scheme in American history."\n\nWalmart said it plans to retrain displaced workers for roles in e-commerce fulfillment and robot maintenance, with a $500M workforce development fund. The company employs 1.6 million people in the US, meaning up to 480,000 roles could be affected.',
-    url: 'https://apnews.com'
-  },
   s1: {
     summary: 'Arsenal completed a stunning 4-1 comeback victory at the Santiago Bernabeu, eliminating 15-time champions Real Madrid from the Champions League. Bukayo Saka was instrumental, scoring twice and setting up Gabriel Martinelli\'s equalizer.\n\nReal Madrid took a 1-0 lead through Vinicius Jr.\'s penalty in the 23rd minute. Arsenal equalized before halftime through Saka\'s long-range strike, then scored three more in 12 second-half minutes to silence the 80,000-strong home crowd.\n\nThis marks Arsenal\'s first Champions League semi-final since 2009, when they lost to Manchester United. The Gunners will face Inter Milan in the last four, with the first leg at the Emirates in 10 days.',
     url: 'https://www.espn.com'
@@ -358,20 +229,8 @@ const summaries = {
     summary: 'McLaren unveiled the MCL40 ahead of the 2026 Formula 1 season with a revolutionary "Morphing Aero" system — active aerodynamic surfaces that adjust 400 times per second based on track conditions, sensor data, and AI predictions of upcoming corners.\n\nThe system, developed in partnership with the UK\'s Advanced Research Projects Agency, eliminates the traditional downforce-drag trade-off. At high speed on straights, the wings flatten to minimize drag. In corners, they reposition for maximum downforce in under 5 milliseconds.\n\nTeam principal Andrea Stella called it "a paradigm shift as significant as ground effect was in the 1970s." The MCL40 will debut at the Bahrain Grand Prix in March.',
     url: 'https://www.motorsport.com'
   },
-  s4: {
-    summary: 'The LA28 organizing committee confirmed the return of skateboarding, sport climbing, and surfing — the three sports added for Tokyo 2020 — and added breakdancing (breaking) and flag football to the Olympic program. The decisions were made to attract younger audiences, with 65% of Olympic viewers now under 35.\n\nFlag football, played with a 5-player format and soft-contact rules, will feature 16 men\'s and 16 women\'s teams. Breaking will hold its second Olympic Games after debuting in Paris 2024, where Korean breaker Ryu "Phil" Seo became a global star.\n\nTrack and field, swimming, and gymnastics remain the backbone of the Games, with LA28 adding no new sports to those core categories.',
-    url: 'https://www.si.com'
-  },
-  s5: {
-    summary: 'World No. 1 tennis player Jannik Sinner accepted a six-month suspension from the International Tennis Integrity Agency after trace amounts of a prohibited substance were found in a supplement he was taking for a wrist injury. The substance, clostebol, was listed on the product label but at a concentration that triggered a positive test.\n\nSinner, 24, has maintained his innocence throughout, and the ITIA accepted that there was "no intentional wrongdoing." The sanction was reduced from the standard two years to six months under the athlete whereabouts program cooperation provisions.\n\nSinner will miss the French Open but will be eligible to return for Wimbledon. "I will use this time to come back stronger," he said in a statement. "I have never cheated and never would."',
-    url: 'https://www.bbc.com/sport'
-  },
-  s6: {
-    summary: 'In one of the most anticipated NFL Drafts in years, the Jacksonville Jaguars selected cornerback-wide receiver Travis Hunter with the first overall pick, trading up from their original No. 5 position. The move cost Jacksonville two future first-round picks and a 2026 third-rounder.\n\nHunter won the Heisman Trophy as the best player in college football while also playing every snap at cornerback for Colorado — a feat unprecedented in modern football. At the NFL Combine, he ran a 4.38 40-yard dash and recorded 4 interceptions in positional drills.\n\nThe Jaguars immediately named Hunter a "full-time two-way player," giving him separate offensive and defensive playbooks. He is expected to play 80+ snaps per game in a role similar to his college usage.',
-    url: 'https://www.nfl.com/news'
-  },
   sc1: {
-    summary: 'NASA\'s Europa Clipper spacecraft, currently orbiting Jupiter, has detected complex organic molecules — including what appear to be amino acid precursors — in material ejected from cracks in Europa\'s ice shell. The findings, presented at the American Geophysical Union meeting, represent the strongest evidence yet that Europa\'s subsurface ocean could harbor life.\n\nThe molecules were identified using the spacecraft\'s mass spectrometer, which sampled plumes of water vapor that erupt from Europa\'s surface. "We are seeing carbon, nitrogen, oxygen, and hydrogen in forms consistent with biological processes," said Dr. Kevin Hand of JPL.\n\nThe detection does not confirm life — these molecules can form through non-biological chemistry — but it confirms Europa has the chemical building blocks and liquid water environment that life would need. A dedicated Europa lander mission is now the top priority of the Planetary Science Decadal Survey.',
+    summary: 'NASA\'s Europa Clipper spacecraft, currently orbiting Jupiter, has detected complex organic molecules — including what appear to be amino acid precursors — in material ejected from cracks in Europa\'s ice shell. The findings, presented at the American Geophysical Union meeting, represent the strongest evidence yet that Europa\'s subsurface ocean could harbor life.\n\nThe molecules were identified using the spacecraft\'s mass spectrometer, which sampled plumes of water vapor that erupt from Europa\'s surface. "We are seeing carbon, nitrogen, oxygen, and hydrogen in forms consistent with biological processes," said Dr. Kevin Hand of JPL.\n\nThe detection does not confirm life — these molecules can form through non-biological chemistry — but it confirms Europa has the chemical building blocks and liquid water environment that life would need.',
     url: 'https://www.jpl.nasa.gov'
   },
   sc2: {
@@ -382,17 +241,17 @@ const summaries = {
     summary: 'A 58-year-old woman named Ms. Liu became the first person to receive a genetically modified pig liver and leave the hospital. The 12-day transplant, performed at Duke University Medical Center, used a liver from a pig engineered by eGenesis with 69 genetic modifications — including the removal of all porcine endogenous retroviruses.\n\nThe liver, which functioned normally throughout the hospital stay, was kept as a "bridge" while Ms. Liu waited for a human donor. Her own liver, damaged by cirrhosis, is expected to recover sufficiently that a full transplant may not be needed.\n\n"This is a proof of concept," said lead surgeon Dr. Andrew Cameron. "A pig can sustain a human life for days or weeks. We now need to study what happens over months." Five more patients are enrolled in the Phase 1 trial.',
     url: 'https://www.nejm.org'
   },
-  sc4: {
-    summary: 'Google Quantum AI published results showing its Willow-2 processor achieved fault-tolerant quantum computing for the first time — maintaining coherence for 10 continuous minutes without a single uncorrected error across 1,000 logical qubits.\n\nPrevious quantum computers could maintain coherence for milliseconds at best, making long computations impossible. Willow-2 uses a novel error correction scheme that detects and fixes errors faster than they accumulate, breaking the "error correction threshold" problem that has plagued quantum computing for 30 years.\n\n"Today we demonstrate that scalable, fault-tolerant quantum computing is not just theoretically possible — it\'s practically achievable," said Google Quantum AI lead Hartmut Neven. The achievement enables algorithms that were previously impossible, including full simulation of protein folding dynamics.',
-    url: 'https://www.science.org'
+  e1: {
+    summary: 'Christopher Nolan\'s "Odyssey" — a sweeping adaptation of Homer\'s epic poem shot entirely on IMAX 70mm cameras across Greece, Italy, Tunisia, Iceland, and nine other countries — has earned $1.2 billion in its global opening weekend, shattering the record for a non-franchise original film.\n\nStarring Zendaya as Circe and John David Washington as Odysseus, the $350 million production features 47 minutes of continuous IMAX sequences depicting the fall of Troy and the Lotus Eater island. Critics are calling it "a once-in-a-generation achievement in cinematic scale."\n\nUniversal reports that 73% of IMAX showings are sold out through the next two weeks. The film has already been greenlit for two sequels.',
+    url: 'https://variety.com'
   },
-  sc5: {
-    summary: 'A deep-sea expedition to the Mariana Trench found microplastic particles at the Sirena Deep — 10,700 meters below sea level — in concentrations comparable to surface ocean gyres. The discovery, published in Nature Geoscience, suggests there is no "place on Earth immune from plastic contamination.\n\nResearchers used a remotely operated vehicle to collect sediment cores at depths previously considered pristine. They found 2,200 microplastic particles per kilogram of sediment — a number comparable to coastal urban areas. The plastics were predominantly polypropylene and polyethylene, matching packaging materials.\n\n"This is a crisis beneath the crisis," said lead researcher Dr. Jenna Matsuda. "Even organisms living in complete darkness, 11 kilometers below the surface, are ingesting our waste." The study calls for urgent global action on single-use plastics.',
-    url: 'https://www.nature.com/natgeoscience'
+  e2: {
+    summary: 'Taylor Swift announced five additional Vancouver shows as part of the "Eras X Tour," her record-breaking extension of the Eras Tour that has already grossed over $4 billion worldwide. Each night will feature a unique surprise acoustic song from her vault — never performed live before.\n\nThe announcement comes after all 12 original Vancouver dates sold out in under 4 minutes. The five additional shows will use a lottery-based ticket system to ensure fan fairness, a departure from the Verified Fan queue that caused chaos in previous legs.\n\n"Eras X" features a new act covering songs from Swift\'s 2025 album "Mariner," plus a reimagined version of the 22-minute closing segment that now includes three unreleased tracks. The final Vancouver show is rumored to be the last performance of the entire Eras franchise.',
+    url: 'https://rollingstone.com'
   },
-  sc6: {
-    summary: 'Eli Lilly announced Phase 3 trial results for remternetug, a next-generation amyloid-clearing antibody, showing a 40% slowing of cognitive decline in early Alzheimer\'s patients compared to placebo over 18 months. The results, published simultaneously in The Lancet and presented at AD/PD 2026, exceeded analyst expectations.\n\nThe 2,100-patient trial used amyloid PET scans to track plaque clearance. Patients with the highest plaque removal (>70%) showed a 55% slowing of decline. Critically, amyloid-related imaging abnormalities occurred in just 12% of patients, compared to 35% for lecanemab.\n\nEli Lilly has filed for FDA accelerated approval. If granted, remternetug could be available by late 2026 at an estimated annual cost of $28,000.',
-    url: 'https://www.thelancet.com'
+  e3: {
+    summary: '"The Last of Us" Season 2, Episode 3 drew 42 million concurrent viewers on HBO Max, setting a new record for the platform and cementing the series as the most-watched in HBO history. The episode, titled "Endure," follows Ellie and Dina\'s mission in Seattle.\n\nCritics are praising the adaptation\'s willingness to diverge from the game\'s narrative, adding scenes that deepen character motivations while maintaining the brutal emotional tone. The episode\'s final sequence — a 12-minute single-take action sequence — was directed by series newcomer Mia Hansen.\n\nHBO has already renewed the series through a potential Season 4, with showrunners Craig Mazin and Neil Druckmann confirming the story will outpace the game\'s second installment. Season 2 continues weekly.',
+    url: 'https://hollywoodreporter.com'
   },
 };
 
@@ -423,14 +282,13 @@ app.get('/api/refresh/:categoryId', async (req, res) => {
   const news = mockNews[categoryId];
   if (!news) return res.status(404).json({ error: 'Category not found' });
 
-  // Simulate freshness reset - in real impl, would hit Brave Search here
   const fresh = news.map(item => ({
     ...item,
-    time: item.time // keep original times for MVP
+    time: item.time
   }));
   res.json(fresh);
 });
 
 app.listen(PORT, () => {
-  console.log(`📰 News Quest server running on http://localhost:${PORT}`);
+  console.log(`📰 News Claw server running on http://localhost:${PORT}`);
 });
