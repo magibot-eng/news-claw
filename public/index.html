@@ -992,7 +992,7 @@ function renderCards() {
   shownCards.forEach((article, i) => {
     const card = document.createElement('div');
     card.className = 'news-card';
-    card.style.borderColor = article.sourceCategoryColor || '#00d4ff';
+    card.style.setProperty('--card-color', article.sourceCategoryColor || '#00d4ff');
     card.innerHTML = `
       <div class="card-source">${article.source}</div>
       <div class="card-headline">${article.headline}</div>
@@ -1150,6 +1150,11 @@ function sleep(ms) {
 }
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
+�──────────────────
 init();
 </script>
 </body>

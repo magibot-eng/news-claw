@@ -37,14 +37,20 @@ async function generateSummary(article) {
 
   try {
     const ai = getGenAI();
+    const prompt = `You are a news editor. Write a detailed summary (2-4 paragraphs) covering:
+1. What happened (the main facts)
+2. Why it matters (the significance)
+3. Key details worth knowing
+
+Write in an engaging, informative style. Do not be vague.
+
+Title: ${article.title || article.headline || ''}
+${rawDesc}
+
+Summary:`;
     const result = await ai.models.generateContent({
       model: 'gemini-2.0-flash-lite',
-      contents: [{
-        role: 'user',
-        parts: [{
-          text: `You are a sharp, witty news editor. Rewrite this article description into 1-3 punchy, engaging sentences that capture the key point and why it matters. Be direct, avoid filler.\n\nTitle: ${article.title || article.headline || ''}\n\nDescription: ${rawDesc}`
-        }]
-      }]
+      contents: [{ role: 'user', parts: [{ text: prompt }] }]
     });
 
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -57,12 +63,11 @@ async function generateSummary(article) {
 }
 
 function rewriteSummary(raw) {
-  // Lightweight client-side rewrite: truncate to core, add punch if short
+  // Fallback: expand the Brave description into a more substantive paragraph
   const s = raw.trim();
   if (!s) return '';
-  // Strip trailing partial sentences
-  const truncated = s.length > 400 ? s.substring(0, 400).replace(/\s+\S*$/, '') + '...' : s;
-  return truncated;
+  // If it's short, just return as-is; if long, clean up the trailing word
+  return s.length > 600 ? s.substring(0, 600).replace(/\s+\S*$/, '') + '...' : s;
 }
 
 module.exports = async (req, res) => {
@@ -187,6 +192,8 @@ module.exports = async (req, res) => {
         time: '24h',
         url: item.url,
         description,
+        sourceCategoryId: Number(category),
+        sourceCategoryColor: CATEGORY_COLORS[category],
       };
     });
 
