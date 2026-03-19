@@ -812,9 +812,9 @@ async function loadCategories() {
     card.style.opacity = '0';
 
     card.innerHTML = `
-      <span class="cat-card-emoji">${cat.emoji}</span>
-      <span class="cat-card-name">${cat.name}</span>
-      <span class="cat-card-desc">${CATEGORY_DESCS[cat.id]}</span>
+      <span class="cat-card-emoji">${cat.emoji || ''}</span>
+      <span class="cat-card-name">${cat.name || 'Unknown'}</span>
+      <span class="cat-card-desc">${CATEGORY_DESCS[cat.id] || ''}</span>
     `;
 
     card.addEventListener('click', () => enterCategory(cat.id, cat.name, cat.color));
@@ -920,9 +920,10 @@ function showNextCards() {
   const cardsEl = document.getElementById('cards');
   // Only render if cards container is empty (initial deal)
   if (cardsEl.children.length === 0) {
-    // Guard: block clicks while the initial dealing animation runs
     isAnimating = true;
     renderCards(true);
+    // Simple 500ms lock — enough for the deal animation to complete
+    setTimeout(() => { isAnimating = false; }, 500);
   }
 }
 
@@ -956,24 +957,11 @@ function renderCards(animate = true) {
 
     if (animate) {
       requestAnimationFrame(() => card.classList.add('dealt'));
-      // Reset isAnimating ONLY after the dealing animation finishes — prevents
-      // clicks on cards that are still animating in (they fly/disappear mid-animation).
-      card.addEventListener('animationend', () => {
-        isAnimating = false;
-        const debugEl = document.getElementById('debug-click');
-        if (debugEl) debugEl.textContent = `Cards ready (${shownCards.length} cards)`;
-      }, { once: true });
-      // Safety fallback: ensure isAnimating is false after 1.5s even if animationend missed
-      setTimeout(() => { isAnimating = false; }, 1500);
     } else {
       card.style.opacity = '1';
       card.style.transform = 'none';
-      isAnimating = false; // non-animated render means cards are immediately interactive
     }
   });
-
-  // isAnimating is NOT reset here — animationend listener above handles it.
-  // For reshuffles, isAnimating was already set=true by handleCardClick.
 }
 
 function handleCardClick(cardEl, article) {
@@ -1024,6 +1012,8 @@ function handleCardClick(cardEl, article) {
 
     // 4. Re-render all cards (3 fresh random cards)
     renderCards(true);
+    // Reset animation lock 500ms after render — simple, reliable timing
+    setTimeout(() => { isAnimating = false; }, 500);
     // ─────────────────────────────────────────────────────────────────
 
     // 5. Show summary for the picked article
@@ -1096,7 +1086,7 @@ async function showSummary(article) {
     } catch(e) {
       textEl.innerHTML = '<em>Failed to load summary. Click a card to try again.</em>';
       dialogueBox.classList.remove('fade-in');
-      isAnimating = false; // unblock clicks on fetch error (animationend may not have fired yet)
+      isAnimating = false; // unblock clicks on fetch error
       return;
     }
   }

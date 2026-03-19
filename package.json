@@ -1,0 +1,8 @@
+{
+  "name": "news-quest",
+  "version": "1.0.0",
+  "description": "News Quest - Slay the Spire style news reader",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0"
+  }
+}

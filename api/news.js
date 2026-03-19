@@ -14,6 +14,44 @@ const CATEGORY_COLORS = {
   8: '#ffd700', // I Feel Lucky
 };
 
+// ── Gemini LLM Summarization ──────────────────────────────────────────────────
+let genAI = null;
+function getGenAI() {
+  if (!genAI) {
+    // Dynamic import to avoid errors when GEMINI_API_KEY is not set
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    genAI = new GoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
+  }
+  return genAI;
+}
+
+async function generateSummary(article) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    // No Gemini key — return the Brave description as fallback
+    return article.description || article.snippet || '';
+  }
+
+  try {
+    const ai = getGenAI();
+    const result = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-lite',
+      contents: [{
+        role: 'user',
+        parts: [{
+          text: `You are a news summarizer. Write 1-3 paragraphs summarizing this news article. Focus on the key facts and why this matters. Write in a clear, engaging style.\n\nTitle: ${article.title || article.headline || ''}\n\n${article.description || article.snippet || ''}`
+        }]
+      }]
+    });
+
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    return text || article.description || '';
+  } catch (err) {
+    console.error('Gemini summarization failed:', err.message);
+    return article.description || '';
+  }
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -84,13 +122,22 @@ module.exports = async (req, res) => {
         source,
         time: '24h',
         url: item.url,
-        summary: `${description}\n\nSource: ${item.url}`,
+        description,
         sourceCategoryId: sourceCatId,
         sourceCategoryColor: CATEGORY_COLORS[sourceCatId],
       };
     });
-    cache.set(cacheKey, { data: articles, timestamp: Date.now() });
-    return res.json(articles);
+
+    // Generate LLM summaries in parallel
+    const summarizedArticles = await Promise.all(
+      articles.map(async (article) => {
+        const summary = await generateSummary(article);
+        return { ...article, summary: `${summary}\n\nSource: ${article.url}` };
+      })
+    );
+
+    cache.set(cacheKey, { data: summarizedArticles, timestamp: Date.now() });
+    return res.json(summarizedArticles);
   }
 
   const topic = categoryMap[category] || 'technology news';
@@ -126,15 +173,23 @@ module.exports = async (req, res) => {
         source: source,
         time: '24h',
         url: item.url,
-        summary: `${description}\n\nSource: ${item.url}`,
+        description,
       };
     });
 
-    // Store in cache
-    cache.set(cacheKey, { data: articles, timestamp: Date.now() });
-    console.log(`Cached ${articles.length} articles for category ${category}`);
+    // Generate LLM summaries in parallel
+    const summarizedArticles = await Promise.all(
+      articles.map(async (article) => {
+        const summary = await generateSummary(article);
+        return { ...article, summary: `${summary}\n\nSource: ${article.url}` };
+      })
+    );
 
-    res.json(articles);
+    // Store in cache
+    cache.set(cacheKey, { data: summarizedArticles, timestamp: Date.now() });
+    console.log(`Cached ${summarizedArticles.length} articles for category ${category}`);
+
+    res.json(summarizedArticles);
   } catch (err) {
     console.error('Proxy error:', err);
     res.status(500).json({ error: 'Failed to fetch news', message: err.message });
