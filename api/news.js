@@ -3,6 +3,17 @@ const cache = new Map();
 
 const CACHE_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
 
+const CATEGORY_COLORS = {
+  1: '#00d4ff', // Tech
+  2: '#ff6b6b', // World
+  3: '#ffd700', // Business
+  4: '#2ecc71', // Sports
+  5: '#9b59b6', // Science
+  6: '#e91e63', // Entertainment
+  7: '#00bfa5', // Health
+  8: '#ffd700', // I Feel Lucky
+};
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -42,9 +53,8 @@ module.exports = async (req, res) => {
 
   // Category 8 = "I Feel Lucky" — fetch all 7 topics and combine
   if (String(category) === '8') {
-    const allTopics = Object.values(categoryMap);
     const results = [];
-    await Promise.all(allTopics.map(async (topic) => {
+    for (const [catId, topic] of Object.entries(categoryMap)) {
       const u = `https://api.search.brave.com/res/v1/news/search?q=${encodeURIComponent(topic)}&freshness=pd&count=20`;
       try {
         const r = await fetch(u, {
@@ -52,10 +62,12 @@ module.exports = async (req, res) => {
         });
         if (r.ok) {
           const d = await r.json();
-          results.push(...(d.results || []));
+          for (const item of d.results || []) {
+            results.push({ ...item, _sourceCatId: Number(catId) });
+          }
         }
       } catch (_) {}
-    }));
+    }
     // Shuffle combined results
     for (let i = results.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -64,6 +76,7 @@ module.exports = async (req, res) => {
     const articles = results.slice(0, 15).map((item, i) => {
       const description = item.description || '';
       const source = item.meta_url?.hostname?.replace(/^www\./, '') || item.source?.name || 'Brave';
+      const sourceCatId = item._sourceCatId || 1;
       return {
         id: `blucky${i + 1}`,
         headline: item.title,
@@ -72,6 +85,8 @@ module.exports = async (req, res) => {
         time: '24h',
         url: item.url,
         summary: `${description}\n\nSource: ${item.url}`,
+        sourceCategoryId: sourceCatId,
+        sourceCategoryColor: CATEGORY_COLORS[sourceCatId],
       };
     });
     cache.set(cacheKey, { data: articles, timestamp: Date.now() });

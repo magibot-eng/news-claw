@@ -921,13 +921,15 @@ function renderCards(animate = true) {
 
   const cardsEl = document.getElementById('cards');
   cardsEl.innerHTML = '';
-  const color = CATEGORY_COLORS[currentCategoryId];
+  const defaultColor = CATEGORY_COLORS[currentCategoryId];
 
   shownCards.forEach((article, i) => {
     const card = document.createElement('div');
     card.className = 'card';
-    card.style.borderColor = color;
-    card.style.boxShadow = `0 0 12px ${color}22`;
+    // For "I Feel Lucky" (cat 8), each card gets its source category color
+    const cardColor = article.sourceCategoryColor || defaultColor;
+    card.style.borderColor = cardColor;
+    card.style.boxShadow = `0 0 15px ${cardColor}66`;
     card.style.animationDelay = `${i * 130 + 100}ms`;
     card.style.zIndex = 1 + i;
 
@@ -957,7 +959,8 @@ function handleCardClick(cardEl, article) {
   if (isAnimating) return;
   isAnimating = true;
 
-  const color = CATEGORY_COLORS[currentCategoryId];
+  const defaultColor = CATEGORY_COLORS[currentCategoryId];
+  const cardColor = article.sourceCategoryColor || defaultColor;
   const rect = cardEl.getBoundingClientRect();
 
   // Fly this card to center
@@ -974,8 +977,8 @@ function handleCardClick(cardEl, article) {
     ring.style.top  = (rect.top  + rect.height / 2 - 40) + 'px';
     ring.style.width  = '80px';
     ring.style.height = '80px';
-    ring.style.border = `3px solid ${color}`;
-    ring.style.boxShadow = `0 0 25px ${color}`;
+    ring.style.border = `3px solid ${cardColor}`;
+    ring.style.boxShadow = `0 0 25px ${cardColor}`;
     document.body.appendChild(ring);
     setTimeout(() => ring.remove(), 700);
 
