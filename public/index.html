@@ -912,7 +912,9 @@ function showNextCards() {
   const cardsEl = document.getElementById('cards');
   // Only render if cards container is empty (initial deal)
   if (cardsEl.children.length === 0) {
-    renderCards();
+    // Guard: block clicks while the initial dealing animation runs
+    isAnimating = true;
+    renderCards(true);
   }
 }
 
@@ -946,13 +948,19 @@ function renderCards(animate = true) {
 
     if (animate) {
       requestAnimationFrame(() => card.classList.add('dealt'));
+      // Reset isAnimating ONLY after the dealing animation finishes — prevents
+      // clicks on cards that are still animating in (they fly/disappear mid-animation).
+      card.addEventListener('animationend', () => {
+        isAnimating = false;
+      }, { once: true });
     } else {
       card.style.opacity = '1';
       card.style.transform = 'none';
     }
   });
 
-  isAnimating = false;
+  // isAnimating is NOT reset here — animationend listener above handles it.
+  // For reshuffles, isAnimating was already set=true by handleCardClick.
 }
 
 function handleCardClick(cardEl, article) {
@@ -1069,7 +1077,7 @@ async function showSummary(article) {
     } catch(e) {
       textEl.innerHTML = '<em>Failed to load summary. Click a card to try again.</em>';
       dialogueBox.classList.remove('fade-in');
-      isAnimating = false;
+      isAnimating = false; // unblock clicks on fetch error (animationend may not have fired yet)
       return;
     }
   }
