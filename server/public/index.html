@@ -747,7 +747,7 @@ async function init() {
 
 // ─── CATEGORIES ───────────────────────────────────────────────────────────────
 async function loadCategories() {
-  const res = await fetch('/api/categories');
+  const res = await fetch(`${API_BASE}/api/categories`);
   const cats = await res.json();
   const gridEl = document.getElementById('categoryGrid');
   gridEl.innerHTML = '';
