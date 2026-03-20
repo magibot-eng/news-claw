@@ -618,7 +618,7 @@
 <!-- TOP BAR (shown on both screens) -->
 <div class="top-bar">
   <div class="game-title">📰 NEWS CLAW</div>
-  <button class="back-btn" id="backBtn" style="display:none;">← Browse Another Category</button>
+  <button class="back-btn" id="backBtn" style="display:none;">← Back to Categories</button>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -680,7 +680,7 @@
   <div class="end-title">NEWS CLAW COMPLETE!</div>
   <div class="end-subtitle" id="endSubtitle"></div>
   <div class="end-count" id="endCount"></div>
-  <button class="end-btn" id="endBtn">← Browse Another Category</button>
+  <button class="end-btn" id="endBtn">← Back to Categories</button>
 </div>
 
 <script>
@@ -908,7 +908,7 @@ function handleCardClick(cardEl, article) {
   poolIndex += 3;
 
   // Check if ALL articles have been read
-  if (articlesRead >= newsPool.length) {
+  if (articlesRead >= 7) {
     setTimeout(() => showEndScreen(), 800);
   } else {
     setTimeout(() => {
