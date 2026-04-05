@@ -167,7 +167,7 @@ body{background:var(--bg);background-image:radial-gradient(circle at 1px 1px,rgb
 
 <!-- ═══ TOP BAR ══════════════════════════════ -->
 <div class="top-bar">
-  <button class="back-btn" id="backBtn" onclick="goHome()">
+  <button class="back-btn" id="backBtn">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     BACK
   </button>
@@ -230,6 +230,55 @@ body{background:var(--bg);background-image:radial-gradient(circle at 1px 1px,rgb
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
+// ── Particle Burst ─────────────────────────────────────────
+const PARTICLE_COLORS = ['#00c8e0','#3ddc84','#ffb020','#4a9eff','#f472b6','#a78bfa'];
+let particles = [];
+let particleCanvas, pCtx;
+
+function initParticles() {
+  particleCanvas = document.createElement('canvas');
+  particleCanvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50';
+  document.body.appendChild(particleCanvas);
+  pCtx = particleCanvas.getContext('2d');
+  resizeParticleCanvas();
+  window.addEventListener('resize', resizeParticleCanvas);
+  requestAnimationFrame(tickParticles);
+}
+function resizeParticleCanvas() {
+  if (particleCanvas) { particleCanvas.width = window.innerWidth; particleCanvas.height = window.innerHeight; }
+}
+function burst(x, y, color) {
+  for (let i = 0; i < 22; i++) {
+    const angle = (Math.PI * 2 * i) / 22 + (Math.random() - 0.5) * 0.3;
+    const speed = 2 + Math.random() * 4;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 1,
+      decay: 0.025 + Math.random() * 0.02,
+      size: 2 + Math.random() * 3,
+      color: color || PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)]
+    });
+  }
+}
+function tickParticles() {
+  if (!pCtx) { requestAnimationFrame(tickParticles); return; }
+  pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+  particles = particles.filter(p => p.life > 0);
+  for (const p of particles) {
+    p.x += p.vx; p.y += p.vy;
+    p.vy += 0.08; // gravity
+    p.life -= p.decay;
+    pCtx.globalAlpha = p.life * p.life;
+    pCtx.fillStyle = p.color;
+    pCtx.beginPath();
+    pCtx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+    pCtx.fill();
+  }
+  requestAnimationFrame(tickParticles);
+}
+
 // ── State ───────────────────────────────────────────────────
 const API_BASE = 'https://newsclaw-api.vercel.app';
 const CAT_COLORS = {
@@ -398,6 +447,10 @@ function buildCards() {
 function playCard(slotIdx, article) {
   const cardEl = document.getElementById('card' + slotIdx);
   if (!cardEl || cardEl.classList.contains('played')) return;
+  const catColor = article.sourceCategoryColor || '#00c8e0';
+  // Trigger particle burst
+  const rect = cardEl.getBoundingClientRect();
+  burst(rect.left + rect.width / 2, rect.top + rect.height / 2, catColor);
   // Animate other cards out
   document.querySelectorAll('.card').forEach((c, ci) => {
     if (ci !== slotIdx) {
@@ -502,10 +555,20 @@ function startNewRun() {
 
 // ── Loading ───────────────────────────────────────────────────
 function showLoading(msg) {
-  document.getElementById('loadingMsg').textContent = msg;
+  document.getElementById('loadingMsg').textContent = msg + '...';
   document.getElementById('loadingOverlay').classList.remove('hidden');
+  // Animate dots
+  if (window._loadDots) clearInterval(window._loadDots);
+  let dotCount = 0;
+  window._loadDots = setInterval(() => {
+    dotCount = (dotCount + 1) % 4;
+    const dots = '.'.repeat(dotCount);
+    const el = document.getElementById('loadingMsg');
+    if (el) el.textContent = msg + dots + ' '.repeat(3 - dotCount);
+  }, 400);
 }
 function hideLoading() {
+  if (window._loadDots) { clearInterval(window._loadDots); window._loadDots = null; }
   setTimeout(() => document.getElementById('loadingOverlay').classList.add('hidden'), 300);
 }
 
@@ -553,6 +616,7 @@ document.addEventListener('keydown', e => {
 document.getElementById('backBtn').addEventListener('click', goBack);
 
 // ── Init ──────────────────────────────────────────────────────
+initParticles();
 buildCatGrid();
 updateTopBar();
 hideLoading();
