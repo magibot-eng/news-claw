@@ -3,1046 +3,559 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📰 NEWS CLAW</title>
+<title>NEWS CLAW</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #0f0f1a;
-    --card-bg: #1a1a2e;
-    --text: #e8e8e8;
-    --text-dim: #8888aa;
-    --accent: #ffd700;
-  }
-
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 50% -10%, rgba(30, 30, 80, 0.6) 0%, transparent 60%),
-      radial-gradient(ellipse at 20% 80%, rgba(20, 20, 50, 0.4) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 80%, rgba(20, 20, 50, 0.4) 0%, transparent 50%);
-    color: var(--text);
-    font-family: 'Crimson Text', Georgia, serif;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    user-select: none;
-  }
-
-  /* ─── SCREENS ─── */
-  .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; align-items: center; }
-  .screen.active { display: flex; }
-
-  /* ─── TOP BAR ─── */
-  .top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 24px;
-    background: rgba(0,0,0,0.5);
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-    flex-shrink: 0;
-    gap: 16px;
-    position: relative;
-    z-index: 10;
-  }
-
-  .game-title {
-    font-family: 'Cinzel', serif;
-    font-size: 1.3rem;
-    font-weight: 900;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: #ffffff;
-    text-shadow: 0 0 20px rgba(255,215,0,0.3);
-    white-space: nowrap;
-  }
-
-  .back-btn {
-    font-family: 'Cinzel', serif;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 6px 16px;
-    border-radius: 20px;
-    border: 2px solid var(--text-dim);
-    color: var(--text-dim);
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-  }
-
-  .back-btn:hover {
-    border-color: var(--text);
-    color: var(--text);
-    transform: translateX(-3px);
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     CATEGORY SELECT SCREEN
-  ═══════════════════════════════════════════════════════ */
-  #selectScreen {
-    align-items: center;
-    justify-content: center;
-    padding: 24px 20px;
-    gap: 0;
-  }
-
-  .select-title {
-    font-family: 'Cinzel', serif;
-    font-size: clamp(1.4rem, 5vw, 2rem);
-    font-weight: 900;
-    text-align: center;
-    margin-bottom: 8px;
-    color: #fff;
-    text-shadow: 0 0 30px rgba(255,215,0,0.25);
-    letter-spacing: 3px;
-  }
-
-  .select-subtitle {
-    font-size: clamp(0.8rem, 2.5vw, 1rem);
-    color: var(--text-dim);
-    text-align: center;
-    margin-bottom: 32px;
-    font-style: italic;
-  }
-
-  .category-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    width: 100%;
-    max-width: 720px;
-  }
-
-  .cat-card {
-    background: var(--card-bg);
-    border: 2px solid;
-    border-radius: 14px;
-    padding: 24px 16px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 10px;
-  }
-
-  .cat-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 50%);
-    pointer-events: none;
-  }
-
-  .cat-card-emoji {
-    font-size: 2.8rem;
-    line-height: 1;
-    display: block;
-  }
-
-  .cat-card-name {
-    font-family: 'Cinzel', serif;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .cat-card-desc {
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  .cat-card:hover {
-    transform: translateY(-8px) scale(1.04);
-  }
-
-  @keyframes catCardEntrance {
-    from { opacity: 0; transform: translateY(40px) scale(0.9); }
-    to   { opacity: 1; transform: translateY(0)    scale(1); }
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     MAIN GAME SCREEN
-  ═══════════════════════════════════════════════════════ */
-
-  /* ─── CATEGORY HEADER ─── */
-  .cat-header {
-    text-align: center;
-    padding: 10px 16px 6px;
-    flex-shrink: 0;
-  }
-
-  .cat-header-label {
-    font-family: 'Cinzel', serif;
-    font-size: 0.65rem;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    opacity: 0.5;
-    color: var(--text-dim);
-    margin-bottom: 4px;
-  }
-
-  .cat-header-name {
-    font-family: 'Cinzel', serif;
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-  }
-
-  /* ─── ARTICLES READ COUNTER ─── */
-  .counter-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 16px 4px;
-    flex-shrink: 0;
-  }
-
-  .articles-read-counter {
-    font-family: 'Cinzel', serif;
-    font-size: clamp(0.9rem, 3vw, 1.1rem);
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: var(--accent);
-    text-shadow: 0 0 20px rgba(255,215,0,0.4);
-  }
-
-  .articles-read-counter span {
-    font-size: 1.2em;
-    margin-right: 4px;
-  }
-
-  /* ─── MAIN AREA ─── */
-  .main-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 8px 16px 0;
-    gap: 12px;
-    overflow: hidden;
-    position: relative;
-  }
-
-  /* ─── DIALOGUE BOX ─── */
-  .dialogue-box {
-    width: 100%;
-    max-width: 560px;
-    background: var(--card-bg);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 12px;
-    padding: 20px 24px;
-    position: relative;
-    flex-shrink: 0;
-    min-height: 140px;
-    max-height: 220px;
-    overflow-y: auto;
-    box-shadow: inset 0 2px 12px rgba(0,0,0,0.4);
-    transition: opacity 0.3s ease;
-  }
-
-  .dialogue-box::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 12px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%);
-    pointer-events: none;
-  }
-
-  .dialogue-source {
-    font-family: 'Cinzel', serif;
-    font-size: 0.65rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    opacity: 0.6;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .dialogue-source a {
-    color: var(--accent);
-    text-decoration: none;
-    opacity: 0.9;
-  }
-
-  .dialogue-source a:hover {
-    opacity: 1;
-    text-decoration: underline;
-  }
-
-  .dialogue-time { opacity: 0.5; }
-
-  .dialogue-text {
-    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
-    line-height: 1.75;
-    color: var(--text);
-  }
-
-  .dialogue-text .cursor {
-    display: inline-block;
-    width: 2px;
-    height: 1em;
-    background: var(--accent);
-    margin-left: 2px;
-    animation: blink 0.8s step-end infinite;
-    vertical-align: text-bottom;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-  }
-
-  .dialogue-placeholder {
-    text-align: center;
-    color: var(--text-dim);
-    font-style: italic;
-    font-size: 1rem;
-    padding: 30px 0;
-    opacity: 0.7;
-  }
-
-  /* Cards dimmed when summary is showing */
-  .hand-area.dimmed .cards .card {
-    opacity: 0.2;
-    pointer-events: none;
-  }
-  .hand-area.dimmed .hand-label {
-    opacity: 0.25;
-  }
-
-  /* ─── CARD HAND ─── */
-  .hand-area {
-    flex-shrink: 0;
-    padding: 14px 10px 28px;
-    background: linear-gradient(0deg, rgba(0,0,0,0.65) 0%, transparent 80%);
-    width: 100%;
-    transition: opacity 0.3s ease;
-    position: relative;
-    z-index: 5;
-  }
-
-  .hand-label {
-    text-align: center;
-    font-family: 'Cinzel', serif;
-    font-size: 0.6rem;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 12px;
-    opacity: 0.6;
-    transition: opacity 0.3s ease;
-  }
-
-  .cards {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    position: relative;
-    isolation: isolate;
-  }
-
-  .card {
-    background: var(--card-bg);
-    border: 2px solid;
-    border-radius: 10px;
-    padding: 14px 16px;
-    width: 170px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.3s ease;
-    opacity: 0;
-    transform: translateX(70px);
-    flex-shrink: 0;
-    z-index: 1;
-    pointer-events: auto;
-  }
-
-  .card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 55%);
-    pointer-events: none;
-  }
-
-  .card-headline {
-    font-family: 'Cinzel', serif;
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #ffffff;
-    line-height: 1.35;
-    margin-bottom: 10px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .card-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.65rem;
-    letter-spacing: 1px;
-    opacity: 0.7;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    position: relative;
-    z-index: 1;
-  }
-
-  .card:hover {
-    transform: translateY(-7px) scale(1.06);
-    z-index: 5;
-  }
-
-  /* Card entrance animation */
-  .card.dealt {
-    animation: dealCard 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  }
-
-  @keyframes dealCard {
-    from { opacity: 0; transform: translateX(70px) scale(0.82) rotate(3deg); }
-    to   { opacity: 1; transform: translateX(0)   scale(1)    rotate(0deg); }
-  }
-
-  /* Card fly-to-center on click */
-  .card.flying {
-    animation: flyCenter 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    z-index: 50 !important;
-    pointer-events: none !important;
-  }
-
-  @keyframes flyCenter {
-    0%   { transform: scale(1);    opacity: 1; }
-    50%  { transform: scale(1.35); opacity: 1; }
-    100% { transform: scale(0);    opacity: 0; }
-  }
-
-  /* Dissolve ring effect */
-  .dissolve-ring {
-    position: fixed;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 200;
-    animation: dissolveRing 0.7s ease-out forwards;
-  }
-
-  @keyframes dissolveRing {
-    0%   { transform: scale(0); opacity: 0.8; }
-    100% { transform: scale(4); opacity: 0; }
-  }
-
-  /* Dialogue fade */
-  .dialogue-box.fade-out {
-    animation: fadeDialogueOut 0.3s ease forwards;
-  }
-  .dialogue-box.fade-in {
-    animation: fadeDialogueIn 0.4s ease forwards;
-  }
-
-  @keyframes fadeDialogueOut {
-    from { opacity: 1; transform: translateY(0); }
-    to   { opacity: 0; transform: translateY(-6px); }
-  }
-  @keyframes fadeDialogueIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Loading shimmer on cards */
-  .card.loading {
-    animation: shimmer 1.2s ease infinite;
-  }
-  @keyframes shimmer {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 0.7; }
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     END SCREEN
-  ═══════════════════════════════════════════════════════ */
-  .end-screen {
-    position: fixed;
-    inset: 0;
-    background: rgba(10, 10, 20, 0.97);
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 300;
-    text-align: center;
-    padding: 32px 24px;
-    gap: 20px;
-    animation: fadeInEnd 0.5s ease forwards;
-  }
-
-  .end-screen.visible {
-    display: flex;
-  }
-
-  @keyframes fadeInEnd {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  .end-emoji {
-    font-size: 5rem;
-    animation: endPop 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  }
-
-  @keyframes endPop {
-    from { transform: scale(0) rotate(-20deg); opacity: 0; }
-    to   { transform: scale(1) rotate(0deg);   opacity: 1; }
-  }
-
-  .end-title {
-    font-family: 'Cinzel', serif;
-    font-size: clamp(1.5rem, 5vw, 2.2rem);
-    font-weight: 900;
-    color: var(--accent);
-    text-shadow: 0 0 40px rgba(255,215,0,0.5);
-    letter-spacing: 3px;
-    animation: endSlide 0.5s 0.2s cubic-bezier(0.22,1,0.36,1) both;
-  }
-
-  .end-subtitle {
-    font-size: clamp(1rem, 3vw, 1.2rem);
-    color: var(--text-dim);
-    max-width: 400px;
-    line-height: 1.6;
-    animation: endSlide 0.5s 0.35s cubic-bezier(0.22,1,0.36,1) both;
-  }
-
-  .end-subtitle strong {
-    color: var(--text);
-  }
-
-  .end-count {
-    font-family: 'Cinzel', serif;
-    font-size: 1rem;
-    color: var(--accent);
-    letter-spacing: 2px;
-    animation: endSlide 0.5s 0.45s cubic-bezier(0.22,1,0.36,1) both;
-  }
-
-  @keyframes endSlide {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .end-btn {
-    font-family: 'Cinzel', serif;
-    font-size: 0.85rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    padding: 14px 32px;
-    border-radius: 30px;
-    border: 2px solid var(--accent);
-    color: var(--accent);
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    animation: endSlide 0.5s 0.55s cubic-bezier(0.22,1,0.36,1) both;
-    margin-top: 8px;
-  }
-
-  .end-btn:hover {
-    background: var(--accent);
-    color: var(--bg);
-    box-shadow: 0 0 30px rgba(255,215,0,0.4);
-    transform: scale(1.04);
-  }
-
-  /* Mobile */
-  @media (max-width: 700px) {
-    .category-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (max-width: 600px) {
-    .card {
-      width: 148px;
-      padding: 12px 13px;
-    }
-    .cards { gap: 8px; }
-    .dialogue-box { padding: 16px 18px; max-height: 180px; }
-    .top-bar { padding: 12px 16px; }
-    .game-title { font-size: 1.1rem; letter-spacing: 2px; }
-    .cat-card { padding: 20px 14px; }
-    .cat-card-emoji { font-size: 2.4rem; }
-    .cat-card-name { font-size: 0.85rem; }
-  }
-
-  @media (max-width: 480px) {
-    .card {
-      width: 100%;
-      max-width: 280px;
-    }
-    .cards { flex-direction: column; align-items: center; }
-    .category-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-  }
-
-  /* Scrollbar styling */
-  .dialogue-box::-webkit-scrollbar { width: 4px; }
-  .dialogue-box::-webkit-scrollbar-track { background: transparent; }
-  .dialogue-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+--bg:#080808;--surface:#0e0e0e;--surface-hi:#161616;--border:#1e1e1e;
+--text:#e8e4dc;--text-dim:#4a4a4a;--accent:#00c8e0;
+--accent-dim:rgba(0,200,224,0.1);--accent-glow:rgba(0,200,224,0.2);
+--green:#3ddc84;--amber:#ffb020;--red:#ff4757;--blue:#4a9eff;
+--pink:#f472b6;--violet:#a78bfa;--emerald:#34d399;
+--cat-tech:#00c8e0;--cat-world:#ff6b6b;--cat-business:#ffb020;
+--cat-sports:#3ddc84;--cat-science:#a78bfa;--cat-entertainment:#f472b6;
+--cat-health:#34d399;--cat-lucky:#00c8e0;
+--font-mono:'JetBrains Mono',monospace;--font-sans:'Inter',sans-serif;
+--radius:6px;--card-w:260px;
+}
+
+html{font-size:14px;scroll-behavior:smooth}
+body{background:var(--bg);background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,0.012) 1px,transparent 0);background-size:28px 28px;color:var(--text);font-family:var(--font-sans);min-height:100dvh;overflow:hidden;user-select:none}
+
+/* ── Scrollbar ─────────────────────────── */
+::-webkit-scrollbar{width:3px}:-webkit-scrollbar-track{background:var(--bg)}:-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── Screens ──────────────────────────── */
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden}
+.screen.active{display:flex}
+
+/* ── Top Bar ──────────────────────────── */
+.top-bar{display:flex;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface);gap:12px;flex-shrink:0}
+.top-bar .logo{font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:3px;color:var(--accent);text-transform:uppercase;flex:1}
+.top-bar .back-btn{display:none;background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:6px 12px;border-radius:var(--radius);cursor:pointer;transition:all .15s}
+.back-btn.visible{display:flex;align-items:center;gap:6px}
+.back-btn:hover{border-color:var(--accent);color:var(--accent)}
+.back-btn svg{width:12px;height:12px}
+.stats-row{display:flex;align-items:center;gap:16px}
+.stat-pill{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);white-space:nowrap}
+.stat-pill span{color:var(--text)}
+.stat-pill.streak span{color:var(--amber)}
+
+/* ═══════════════════════════════════════
+   CATEGORY SELECT SCREEN
+   ═══════════════════════════════════════ */
+#selectScreen{align-items:center;justify-content:center;padding:24px 16px;gap:32px;overflow-y:auto}
+.select-header{text-align:center}
+.select-title{font-family:var(--font-mono);font-size:clamp(18px,5vw,28px);font-weight:700;letter-spacing:4px;color:var(--text);text-transform:uppercase;margin-bottom:6px}
+.select-sub{font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase}
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:640px;width:100%}
+.cat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 12px;cursor:pointer;transition:all .18s cubic-bezier(0.2,0.8,0.2,1);display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;overflow:hidden}
+.cat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--cat-color,var(--accent));opacity:0.7}
+.cat-card:hover{background:var(--surface-hi);border-color:var(--cat-color,var(--accent));transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+.cat-card:hover::before{opacity:1}
+.cat-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.cat-icon svg{width:24px;height:24px}
+.cat-name{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text);text-transform:uppercase;text-align:center}
+.cat-desc{font-size:10px;color:var(--text-dim);text-align:center;line-height:1.4}
+.cat-card.lucky{grid-column:span 2}
+.bottom-stats{display:flex;gap:24px;justify-content:center;padding:16px}
+.bottom-stat{font-family:var(--font-mono);font-size:10px;color:var(--text-dim)}
+.bottom-stat span{color:var(--text)}
+.bottom-stat.amber span{color:var(--amber)}
+
+/* ═══════════════════════════════════════
+   CARD HAND SCREEN
+   ═══════════════════════════════════════ */
+#cardScreen{flex-direction:column}
+.hand-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.hand-header{display:flex;align-items:center;padding:10px 20px;border-bottom:1px solid var(--border);gap:12px;flex-shrink:0}
+.hand-cat{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--cat-color,var(--accent))}
+.hand-counter{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);margin-left:auto}
+.hand-bar{flex:1;min-height:3px;background:var(--border);border-radius:2px;margin:0 20px;position:relative;overflow:hidden}
+.hand-bar-fill{height:100%;background:var(--cat-color,var(--accent));border-radius:2px;transition:width .4s cubic-bezier(0.2,0.8,0.2,1);width:0%;box-shadow:0 0 8px var(--cat-color,var(--accent))}
+.hand-meta{display:flex;align-items:center;padding:8px 20px;gap:8px;font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);flex-shrink:0}
+.hand-meta svg{width:10px;height:10px}
+
+/* Dialogue Box */
+.dialogue{flex-shrink:0;min-height:180px;max-height:220px;overflow-y:auto;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface)}
+.dialogue-source{font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.dialogue-time{color:var(--text-dim);font-weight:400;margin-left:auto}
+.dialogue-headline{font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:10px}
+.dialogue-summary{font-size:13px;color:var(--text);line-height:1.65;max-width:680px}
+.dialogue-summary .cursor{color:var(--accent);animation:blink .7s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.dialogue-link{display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-family:var(--font-mono);font-size:10px;color:var(--accent);text-decoration:none;letter-spacing:1px;transition:opacity .15s}
+.dialogue-link:hover{opacity:.7}
+.dialogue-link svg{width:12px;height:12px}
+.dialogue-empty{color:var(--text-dim);font-size:13px;padding:8px 0;font-style:italic}
+.dialogue-ai-badge{font-family:var(--font-mono);font-size:8px;letter-spacing:1px;color:var(--text-dim);border:1px solid var(--border);padding:2px 6px;border-radius:2px;text-transform:uppercase}
+
+/* Cards */
+.cards-area{flex-shrink:0;padding:20px 16px 24px;display:flex;justify-content:center;align-items:flex-end;gap:16px;min-height:200px;background:linear-gradient(180deg,var(--surface) 0%,var(--bg) 100%)}
+.card-slot{width:var(--card-w);position:relative;opacity:0;transform:translateY(30px)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .18s cubic-bezier(0.2,0.8,0.2,1);overflow:hidden;position:relative}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--cat-color,var(--accent));opacity:.8}
+.card:hover{transform:translateY(-8px);border-color:var(--cat-color,var(--accent));box-shadow:0 12px 32px rgba(0,0,0,0.5)}
+.card:hover::before{opacity:1}
+.card.dismissed{opacity:0;transform:translateX(-60px) rotate(-8deg) scale(.9);pointer-events:none}
+.card.played{opacity:0;transform:translateY(-80px) scale(.8);pointer-events:none}
+.card-body{padding:14px 16px}
+.card-headline{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text);line-height:1.4;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card-footer{display:flex;align-items:center;justify-content:space-between}
+.card-source{font-size:10px;color:var(--text-dim);font-family:var(--font-mono)}
+.card-time{font-size:9px;color:var(--text-dim);font-family:var(--font-mono);background:var(--surface-hi);padding:2px 6px;border-radius:2px}
+.card-tap{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,var(--cat-color,var(--accent)));padding:20px 16px 12px;text-align:center;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:3px;color:var(--bg);text-transform:uppercase;opacity:0;transition:opacity .15s}
+.card:hover .card-tap{opacity:.9}
+.skip-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:2px;cursor:pointer;opacity:0;transition:all .15s;text-transform:uppercase}
+.card:hover .skip-btn{opacity:1}
+.skip-btn:hover{background:rgba(255,255,255,0.1);color:var(--text)}
+
+/* ═══════════════════════════════════════
+   RUN COMPLETE SCREEN
+   ═══════════════════════════════════════ */
+#completeScreen{align-items:center;justify-content:center;padding:24px;text-align:center;gap:24px}
+.complete-icon{width:64px;height:64px;border-radius:50%;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 0 24px var(--accent-glow);animation:pulse-glow 2s ease-in-out infinite}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 16px var(--accent-glow)}50%{box-shadow:0 0 32px var(--accent-glow),0 0 48px rgba(0,200,224,0.1)}}
+.complete-icon svg{width:28px;height:28px;color:var(--accent)}
+.complete-title{font-family:var(--font-mono);font-size:clamp(20px,6vw,32px);font-weight:700;letter-spacing:4px;color:var(--text);text-transform:uppercase}
+.complete-cat{font-family:var(--font-mono);font-size:11px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-top:-12px}
+.complete-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:400px;width:100%}
+.complete-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 12px;display:flex;flex-direction:column;gap:4px}
+.complete-stat .num{font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--text)}
+.complete-stat .lbl{font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase}
+.complete-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.complete-btn{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px 24px;border-radius:var(--radius);cursor:pointer;transition:all .15s}
+.complete-btn.primary{background:var(--accent);color:var(--bg);border:none}
+.complete-btn.primary:hover{background:#00e0f0;transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,200,224,0.3)}
+.complete-btn.secondary{background:transparent;color:var(--text-dim);border:1px solid var(--border)}
+.complete-btn.secondary:hover{border-color:var(--text-dim);color:var(--text)}
+
+/* ═══════════════════════════════════════
+   LOADING OVERLAY
+   ═══════════════════════════════════════ */
+.loading-overlay{position:fixed;inset:0;background:rgba(8,8,8,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:12px;backdrop-filter:blur(4px)}
+.loading-overlay.hidden{opacity:0;pointer-events:none;transition:opacity .4s}
+.loading-title{font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:4px;color:var(--accent);text-transform:uppercase}
+.loading-msg{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:2px}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════ */
+@media(max-width:600px){
+.cat-grid{grid-template-columns:repeat(2,1fr)}
+.cat-card.lucky{grid-column:span 1}
+.cards-area{gap:10px;padding:16px 8px 20px}
+.card-slot{width:160px}
+.card-headline{font-size:11px;-webkit-line-clamp:2}
+.dialogue{max-height:160px;padding:12px 16px}
+.dialogue-headline{font-size:13px}
+.hand-bar{margin:0 16px}
+.complete-stats{grid-template-columns:repeat(2,1fr)}
+}
 </style>
 </head>
 <body>
 
-<!-- TOP BAR (shown on both screens) -->
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-title">NEWS CLAW</div>
+  <div class="loading-msg" id="loadingMsg">LOADING</div>
+</div>
+
+<!-- ═══ TOP BAR ══════════════════════════════ -->
 <div class="top-bar">
-  <div class="game-title">📰 NEWS CLAW</div>
-  <button class="back-btn" id="backBtn" style="display:none;">← Back to Categories</button>
+  <button class="back-btn" id="backBtn" onclick="goHome()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    BACK
+  </button>
+  <div class="logo">NEWS CLAW</div>
+  <div class="stats-row">
+    <div class="stat-pill">READ: <span id="topTotal">0</span></div>
+    <div class="stat-pill streak">STREAK: <span id="topStreak">0</span>d</div>
+  </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     SCREEN 1: CATEGORY SELECT
-═══════════════════════════════════════════════════════ -->
+<!-- ═══ SCREEN 1: CATEGORY SELECT ══════════════ -->
 <div class="screen active" id="selectScreen">
-  <div class="select-title">Choose Your Quest</div>
-  <div class="select-subtitle">Pick a category to begin your news adventure</div>
-  <div class="category-grid" id="categoryGrid"></div>
+  <div class="select-header">
+    <div class="select-title">CHOOSE YOUR QUEST</div>
+    <div class="select-sub">READ THE NEWS YOUR WAY</div>
+  </div>
+  <div class="cat-grid" id="catGrid"></div>
+  <div class="bottom-stats">
+    <div class="bottom-stat">TOTAL READ: <span id="totalRead">0</span></div>
+    <div class="bottom-stat amber">STREAK: <span id="streakDays">0</span> DAYS</div>
+  </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     SCREEN 2: MAIN GAME
-═══════════════════════════════════════════════════════ -->
-<div class="screen" id="mainScreen">
-
-  <!-- Category name in header -->
-  <div class="cat-header">
-    <div class="cat-header-label">Currently Reading</div>
-    <div class="cat-header-name" id="catHeaderName"></div>
-  </div>
-
-  <!-- Articles Read Counter -->
-  <div class="counter-container">
-    <div class="articles-read-counter">
-      <span>📰</span> Articles Read: <span id="articlesReadCount">0</span>
+<!-- ═══ SCREEN 2: CARD HAND ═══════════════════ -->
+<div class="screen" id="cardScreen">
+  <div class="hand-area">
+    <div class="hand-header">
+      <span class="hand-cat" id="handCat">TECH</span>
+      <div class="hand-bar"><div class="hand-bar-fill" id="handBarFill"></div></div>
+      <span class="hand-counter" id="handCounter">0/15</span>
+    </div>
+    <div class="hand-meta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      TAP CARD TO READ · SKIP WITH BUTTON OR [SPACE]
+    </div>
+    <div class="dialogue" id="dialogue">
+      <div class="dialogue-empty">Pick a card to read the latest news...</div>
     </div>
   </div>
-
-  <!-- MAIN AREA -->
-  <div class="main-area">
-
-    <!-- DIALOGUE BOX -->
-    <div class="dialogue-box" id="dialogueBox">
-      <div class="dialogue-placeholder" id="dialoguePlaceholder">
-        Pick a card to read the latest news...
-      </div>
-      <div id="dialogueContent" style="display:none;">
-        <div class="dialogue-source" id="dialogueSource"></div>
-        <div class="dialogue-text" id="dialogueText"></div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- CARD HAND -->
-  <div class="hand-area" id="handArea">
-    <div class="hand-label">— CHOOSE YOUR CARD —</div>
-    <div class="cards" id="cards"></div>
-  </div>
-
+  <div class="cards-area" id="cardsArea"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     END SCREEN OVERLAY
-═══════════════════════════════════════════════════════ -->
-<div class="end-screen" id="endScreen">
-  <div class="end-emoji">🎉</div>
-  <div class="end-title">NEWS CLAW COMPLETE!</div>
-  <div class="end-subtitle" id="endSubtitle"></div>
-  <div class="end-count" id="endCount"></div>
-  <button class="end-btn" id="endBtn">← Back to Categories</button>
+<!-- ═══ SCREEN 3: RUN COMPLETE ═════════════════ -->
+<div class="screen" id="completeScreen">
+  <div class="complete-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <div class="complete-title">RUN COMPLETE</div>
+  <div class="complete-cat" id="completeCat">TECH</div>
+  <div class="complete-stats">
+    <div class="complete-stat"><div class="num" id="completeArticles">0</div><div class="lbl">Articles Read</div></div>
+    <div class="complete-stat"><div class="num" id="completeTime">0:00</div><div class="lbl">Time</div></div>
+    <div class="complete-stat"><div class="num" id="completeStreak">0</div><div class="lbl">Best Streak</div></div>
+  </div>
+  <div class="complete-actions">
+    <button class="complete-btn primary" onclick="startNewRun()">NEW QUEST</button>
+    <button class="complete-btn secondary" onclick="goHome()">HOME</button>
+  </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
-// ─── API CONFIG ───────────────────────────────────────────────────────────────
-// Detect environment: local dev server vs Vercel/production
-const IS_LOCAL = window.location.hostname === 'localhost' && window.location.port === '3457';
-const API_BASE = IS_LOCAL ? 'http://localhost:3457' : 'https://newsclaw-api.vercel.app';
-// Local Express uses /api/news/:catId; Vercel proxy uses /api/news?category=:catId
-const NEWS_ENDPOINT = IS_LOCAL ? `${API_BASE}/api/news` : `${API_BASE}/api/news`;
-
-// ─── STATE ────────────────────────────────────────────────────────────────────
-let articlesRead = 0;
-let selectedCategory = null;
-let currentCategoryId = null;
-let currentCategoryName = null;
-let newsPool = [];
-let poolIndex = 0;
-let allReadTriggered = false; // guard against double-triggering end screen
-
-const CATEGORY_COLORS = {
-  1: '#00d4ff', // Tech
-  2: '#ff6b6b', // World
-  3: '#ffd700', // Business
-  4: '#2ecc71', // Sports
-  5: '#9b59b6', // Science
-  6: '#e91e63', // Entertainment
+// ── State ───────────────────────────────────────────────────
+const API_BASE = 'https://newsclaw-api.vercel.app';
+const CAT_COLORS = {
+  1:'var(--cat-tech)',2:'var(--cat-world)',3:'var(--cat-business)',
+  4:'var(--cat-sports)',5:'var(--cat-science)',6:'var(--cat-entertainment)',
+  7:'var(--cat-health)',8:'var(--cat-lucky)'
+};
+const CAT_NAMES = {1:'TECH',2:'WORLD',3:'BUSINESS',4:'SPORTS',5:'SCIENCE',6:'ENTERTAIN',7:'HEALTH',8:'LUCKY'};
+const CAT_ICONS = {
+  1:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--cat-tech)" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+  2:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--cat-world)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  3:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--cat-business)" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  4:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--cat-sports)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8l4 4-4 4M8.5 12H12M12 8l-4 4 4 4"/></svg>',
+  5:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--cat-science)" stroke-width="1.5" stroke-linecap="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0H5a2 2 0 0 1-2-2V9m6 4h4"/><circle cx="17" cy="17" r="3"/></svg>',
+  6:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--cat-entertainment)" stroke-width="1.5" stroke-linecap="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+  7:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--cat-health)" stroke-width="1.5" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+  8:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--cat-lucky)" stroke-width="1.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+};
+const CAT_DESCS = {
+  1:'AI, gadgets, and the future',2:'World events and geopolitics',
+  3:'Markets, business, and economy',4:'Sports scores and analysis',
+  5:'Science discoveries and research',6:'Movies, music, and culture',
+  7:'Health, medicine, and wellness',8:'Mixed from all categories'
 };
 
-const CATEGORY_DESCS = {
-  1: 'AI breakthroughs, gadgets, and the future of tech',
-  2: 'Global events shaping our world today',
-  3: 'Markets, companies, and the economy',
-  4: 'Scores, trades, and athletic triumphs',
-  5: 'Discoveries, medicine, and the cosmos',
-  6: 'Movies, TV, music, and celebrity news',
-  7: 'Wellness, nutrition, and medical breakthroughs',
-  8: 'Surprise yourself with random stories',
+let state = {
+  currentCat: null,
+  articles: [],
+  poolIndex: 0,
+  readCount: 0,
+  runStartTime: null,
+  bestStreak: 0,
+  currentStreak: 0,
+  runComplete: false,
+  typingInterval: null,
 };
 
-// ─── SCREEN MANAGEMENT ────────────────────────────────────────────────────────
-function showSelectScreen() {
-  document.getElementById('selectScreen').classList.add('active');
-  document.getElementById('mainScreen').classList.remove('active');
-  document.getElementById('backBtn').style.display = 'none';
-  hideEndScreen();
+// ── localStorage ─────────────────────────────────────────────
+function getStats() {
+  const s = JSON.parse(localStorage.getItem('nc_stats') || '{}');
+  return {
+    totalRead: s.totalRead || 0,
+    streak: s.streak || 0,
+    lastRead: s.lastRead || null,
+    dailyRead: s.dailyRead || {}
+  };
+}
+function saveStats(stats) {
+  localStorage.setItem('nc_stats', JSON.stringify(stats));
+}
+function updateTotalRead() {
+  const s = getStats();
+  const today = new Date().toISOString().slice(0,10);
+  s.totalRead++;
+  s.dailyRead[today] = (s.dailyRead[today] || 0) + 1;
+  // Check streak
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  if (s.lastRead === yesterday) {
+    s.streak++;
+  } else if (s.lastRead !== today) {
+    s.streak = 1;
+  }
+  s.lastRead = today;
+  saveStats(s);
+}
+function updateTopBar() {
+  const s = getStats();
+  document.getElementById('topTotal').textContent = s.totalRead;
+  document.getElementById('topStreak').textContent = s.streak;
+  document.getElementById('totalRead').textContent = s.totalRead;
+  document.getElementById('streakDays').textContent = s.streak;
 }
 
-function showMainScreen(catId) {
-  document.getElementById('selectScreen').classList.remove('active');
-  document.getElementById('mainScreen').classList.add('active');
-  document.getElementById('backBtn').style.display = '';
-  document.getElementById('backBtn').style.borderColor = CATEGORY_COLORS[catId];
-  document.getElementById('backBtn').style.color = CATEGORY_COLORS[catId];
-  hideEndScreen();
+// ── Screen Navigation ──────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goHome() {
+  if (state.typingInterval) { clearInterval(state.typingInterval); state.typingInterval = null; }
+  showScreen('selectScreen');
+  document.getElementById('backBtn').classList.remove('visible');
+  updateTopBar();
+}
+function goBack() {
+  if (state.readCount > 1) {
+    if (!confirm('Abandon this run? Your progress won\'t be saved.')) return;
+  }
+  goHome();
 }
 
-function hideEndScreen() {
-  document.getElementById('endScreen').classList.remove('visible');
-}
-
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-async function init() {
-  await loadCategories();
-}
-
-// ─── CATEGORIES ───────────────────────────────────────────────────────────────
-async function loadCategories() {
-  const res = await fetch(`${API_BASE}/api/categories`);
-  const cats = await res.json();
-  const gridEl = document.getElementById('categoryGrid');
-  gridEl.innerHTML = '';
-
-  cats.forEach((cat, i) => {
+// ── Build Category Grid ────────────────────────────────────────
+function buildCatGrid() {
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= 8; i++) {
     const card = document.createElement('div');
-    card.className = 'cat-card';
-    card.style.borderColor = cat.color;
-    card.style.boxShadow = `0 0 18px ${cat.color}33`;
-    card.style.animation = `catCardEntrance 0.5s cubic-bezier(0.22,1,0.36,1) forwards`;
-    card.style.animationDelay = `${i * 80 + 100}ms`;
-    card.style.opacity = '0';
-
-    card.innerHTML = `
-      <span class="cat-card-emoji">${cat.emoji}</span>
-      <span class="cat-card-name">${cat.name}</span>
-      <span class="cat-card-desc">${CATEGORY_DESCS[cat.id]}</span>
-    `;
-
-    card.addEventListener('click', () => enterCategory(cat.id, cat.name, cat.color));
-    gridEl.appendChild(card);
-  });
+    card.className = 'cat-card' + (i === 8 ? ' lucky' : '');
+    card.style.setProperty('--cat-color', `var(--cat-${['tech','world','business','sports','science','entertainment','health','lucky'][i-1]})`);
+    card.innerHTML = `<div class="cat-icon">${CAT_ICONS[i]}</div><div class="cat-name">${CAT_NAMES[i]}</div><div class="cat-desc">${CAT_DESCS[i]}</div>`;
+    card.onclick = () => startRun(i);
+    grid.appendChild(card);
+    gsap.from(card, { opacity: 0, y: 20, duration: 0.4, delay: (i - 1) * 0.06, ease: 'power2.out' });
+  }
 }
 
-async function enterCategory(catId, catName, catColor) {
-  // Reset state
-  articlesRead = 0;
-  currentCategoryId = catId;
-  currentCategoryName = catName;
-  selectedCategory = catId;
-  newsPool = [];
-  poolIndex = 0;
-  allReadTriggered = false;
-
-  // Update counter
-  document.getElementById('articlesReadCount').textContent = '0';
-
-  // Update category header
-  const headerName = document.getElementById('catHeaderName');
-  headerName.textContent = catName;
-  headerName.style.color = catColor;
-
-  // Clear cards and dialogue
-  document.getElementById('cards').innerHTML = '';
-  clearDialogue();
-  document.getElementById('handArea').classList.remove('dimmed');
-
-  // Switch screen
-  showMainScreen(catId);
-
-  // Fetch news
+// ── Start Run ────────────────────────────────────────────────
+async function startRun(catId) {
+  state = { currentCat: catId, articles: [], poolIndex: 0, readCount: 0, runStartTime: Date.now(), bestStreak: 0, currentStreak: 0, runComplete: false, typingInterval: null };
+  document.getElementById('backBtn').classList.add('visible');
+  showLoading('DEALING CARDS...');
   try {
-    const newsUrl = IS_LOCAL
-      ? `${API_BASE}/api/news/${catId}`
-      : `${API_BASE}/api/news?category=${catId}`;
-    const res = await fetch(newsUrl);
-    newsPool = await res.json();
-    poolIndex = 0;
+    const res = await fetch(`${API_BASE}/api/news?category=${catId}`);
+    if (!res.ok) throw new Error('API error');
+    const articles = await res.json();
+    state.articles = articles;
+    startHand();
   } catch(e) {
-    console.error('Failed to load news', e);
+    hideLoading();
+    alert('Failed to load news. Try again.');
+    goHome();
     return;
   }
-
-  showNextCards();
 }
 
-// ─── BACK BUTTON ──────────────────────────────────────────────────────────────
-document.getElementById('backBtn').addEventListener('click', () => {
-  resetAndGoToSelect();
-});
-
-document.getElementById('endBtn').addEventListener('click', () => {
-  resetAndGoToSelect();
-});
-
-function resetAndGoToSelect() {
-  articlesRead = 0;
-  selectedCategory = null;
-  currentCategoryId = null;
-  currentCategoryName = null;
-  newsPool = [];
-  poolIndex = 0;
-  allReadTriggered = false;
-  clearDialogue();
-  hideEndScreen();
-  showSelectScreen();
-  // Re-trigger cat card animations on return
-  document.querySelectorAll('.cat-card').forEach((card, i) => {
-    card.style.animation = 'none';
-    card.offsetHeight; // reflow
-    card.style.animation = `catCardEntrance 0.5s cubic-bezier(0.22,1,0.36,1) forwards`;
-    card.style.animationDelay = `${i * 80}ms`;
-  });
+// ── Card Hand ─────────────────────────────────────────────────
+function startHand() {
+  const catEl = document.getElementById('handCat');
+  catEl.textContent = CAT_NAMES[state.currentCat];
+  catEl.style.color = `var(--cat-${['tech','world','business','sports','science','entertainment','health','lucky'][state.currentCat-1]})`;
+  document.getElementById('handCounter').textContent = `${state.readCount}/15`;
+  const pct = (state.readCount / 15) * 100;
+  document.getElementById('handBarFill').style.width = pct + '%';
+  document.getElementById('handBarFill').style.background = catEl.style.color;
+  setDialogue('<div class="dialogue-empty">Pick a card to read the latest news...</div>');
+  showScreen('cardScreen');
+  hideLoading();
+  buildCards();
 }
-
-// ─── CARDS ────────────────────────────────────────────────────────────────────
-function showNextCards() {
-  if (allReadTriggered) return;
-
-  const cardsEl = document.getElementById('cards');
-  const batch = newsPool.slice(poolIndex, poolIndex + 3);
-  if (batch.length === 0) return;
-
-  cardsEl.innerHTML = '';
-  const color = CATEGORY_COLORS[currentCategoryId];
-
-  batch.forEach((article, i) => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.borderColor = color;
-    card.style.boxShadow = `0 0 12px ${color}22`;
-    card.style.animationDelay = `${i * 130 + 100}ms`;
-    card.style.zIndex = 1 + i;
-
-    card.innerHTML = `
-      <div class="card-headline">${article.headline}</div>
-      <div class="card-meta">
-        <span>${article.source}</span>
-        <span>${article.time}</span>
-      </div>
-    `;
-
-    card.onclick = () => handleCardClick(card, article);
-    cardsEl.appendChild(card);
-
-    requestAnimationFrame(() => card.classList.add('dealt'));
-  });
-}
-
-function handleCardClick(cardEl, article) {
-  // Stop entrance animation
-  cardEl.classList.remove('dealt');
-  cardEl.classList.add('flying');
-
-  // Create dissolve ring
-  const rect = cardEl.getBoundingClientRect();
-  const color = CATEGORY_COLORS[currentCategoryId];
-  const ring = document.createElement('div');
-  ring.className = 'dissolve-ring';
-  ring.style.left = (rect.left + rect.width / 2  - 40) + 'px';
-  ring.style.top  = (rect.top  + rect.height / 2 - 40) + 'px';
-  ring.style.width  = '80px';
-  ring.style.height = '80px';
-  ring.style.border = `3px solid ${color}`;
-  ring.style.boxShadow = `0 0 25px ${color}`;
-  document.body.appendChild(ring);
-  setTimeout(() => ring.remove(), 700);
-
-  // Show summary
-  showSummary(article);
-
-  // Update counter
-  articlesRead++;
-  document.getElementById('articlesReadCount').textContent = articlesRead;
-
-  // Advance
-  poolIndex += 3;
-
-  // Check if ALL articles have been read
-  if (articlesRead >= 7) {
-    setTimeout(() => showEndScreen(), 800);
-  } else {
-    setTimeout(() => {
-      if (!allReadTriggered) showNextCards();
-    }, 600);
-  }
-}
-
-
-// ─── END SCREEN ───────────────────────────────────────────────────────────────
-function showEndScreen() {
-  allReadTriggered = true;
-
-  const endScreen = document.getElementById('endScreen');
-  const subtitle = document.getElementById('endSubtitle');
-  const count = document.getElementById('endCount');
-
-  subtitle.innerHTML = `You've read all articles in <strong>${currentCategoryName}</strong>.<br>Check back in 8 hours for the latest news.`;
-  count.textContent = `📰 Total articles read: ${articlesRead}`;
-
-  endScreen.classList.add('visible');
-}
-
-// ─── DIALOGUE ─────────────────────────────────────────────────────────────────
-async function showSummary(article) {
-  const dialogueBox = document.getElementById('dialogueBox');
-  const placeholder = document.getElementById('dialoguePlaceholder');
-  const content = document.getElementById('dialogueContent');
-  const sourceEl = document.getElementById('dialogueSource');
-  const textEl = document.getElementById('dialogueText');
-
-  // Fade out
-  dialogueBox.classList.add('fade-out');
-  await sleep(280);
-
-  placeholder.style.display = 'none';
-  content.style.display = 'block';
-
-  const color = CATEGORY_COLORS[currentCategoryId];
-  const articleUrl = article.url || `https://example.com/${article.id}`;
-  sourceEl.innerHTML = `
-    <span style="color: ${color}">${article.source}</span>
-    &nbsp;·&nbsp; <span class="dialogue-time">${article.time}</span>
-    &nbsp;·&nbsp; <a href="${articleUrl}" target="_blank" rel="noopener">Read Full Article →</a>
-  `;
-
-  // Fade in
-  dialogueBox.classList.remove('fade-out');
-  dialogueBox.classList.add('fade-in');
-
-  let summaryData;
-
-  // Brave API embeds summary in article.summary; mock data fetches from /api/summary/:id
-  if (article.summary) {
-    summaryData = { summary: article.summary };
-  } else {
-    try {
-      const res = await fetch(`${API_BASE}/api/summary/${article.id}`);
-      summaryData = await res.json();
-    } catch(e) {
-      textEl.innerHTML = '<em>Failed to load summary. Click a card to try again.</em>';
-      dialogueBox.classList.remove('fade-in');
-        return;
-    }
-  }
-
-  await typewriterEffect(textEl, summaryData.summary);
-
-  await sleep(100);
-  dialogueBox.classList.remove('fade-in');
-}
-
-async function typewriterEffect(el, text) {
-  el.innerHTML = '';
-  const cursor = document.createElement('span');
-  cursor.className = 'cursor';
-  el.appendChild(cursor);
-
-  const segments = text.split('\n');
-
-  for (let s = 0; s < segments.length; s++) {
-    const chars = segments[s].split('');
-    for (let i = 0; i < chars.length; i++) {
-      el.insertBefore(document.createTextNode(chars[i]), cursor);
-      await sleep(3);
-    }
-    if (s < segments.length - 1) {
-      el.insertBefore(document.createElement('br'), cursor);
-      el.insertBefore(document.createElement('br'), cursor);
-      await sleep(60);
-    }
-  }
-
-  await sleep(600);
-  cursor.remove();
-}
-
-function clearDialogue() {
-  const placeholder = document.getElementById('dialoguePlaceholder');
-  const content = document.getElementById('dialogueContent');
-  const dialogueBox = document.getElementById('dialogueBox');
-  const textEl = document.getElementById('dialogueText');
-
-  placeholder.style.display = '';
-  content.style.display = 'none';
-  textEl.innerHTML = '';
-  dialogueBox.classList.remove('fade-in', 'fade-out');
-
-  // Restore card opacities
-  document.querySelectorAll('.card').forEach(c => {
-    c.style.opacity = '';
-  });
-  document.getElementById('handArea').classList.remove('dimmed');
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-// ─── BOOT ─────────────────────────────────────────────────────────────────────
-init();
-</script>
-
-    <div id="dialogue" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:1000; justify-content:center; align-items:center; padding:20px; overflow-y:auto;">
-      <div class="dialogue-box" style="background:#1a1a2e; border-radius:16px; padding:24px; max-width:600px; width:100%; border:2px solid #00d4ff; box-shadow:0 0 30px rgba(0,212,255,0.3);">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
-          <div class="dlg-source" style="font-size:0.75em; color:#888; text-transform:uppercase;"></div>
-          <div class="dlg-time" style="font-size:0.7em; color:#666;"></div>
+function buildCards() {
+  const area = document.getElementById('cardsArea');
+  area.innerHTML = '';
+  const chunk = state.articles.slice(state.poolIndex, state.poolIndex + 3);
+  if (chunk.length === 0) { endRun(); return; }
+  chunk.forEach((art, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'card-slot';
+    slot.style.setProperty('--cat-color', art.sourceCategoryColor || 'var(--accent)');
+    slot.innerHTML = `
+      <div class="card" id="card${i}" data-idx="${state.poolIndex + i}">
+        <button class="skip-btn" onclick="event.stopPropagation(); skipCard(${i})">SKIP</button>
+        <div class="card-body">
+          <div class="card-headline">${escHtml(art.headline || art.title || '')}</div>
+          <div class="card-footer">
+            <span class="card-source">${escHtml(art.source || '')}</span>
+            <span class="card-time">${escHtml(art.time || '24h')}</span>
+          </div>
         </div>
-        <div class="dlg-title" style="font-size:1.3em; color:white; font-weight:bold; margin-bottom:16px; line-height:1.3;"></div>
-        <div class="dlg-body" style="font-size:1em; color:#ccc; line-height:1.6; margin-bottom:20px;"></div>
-        <a class="dlg-link" href="#" target="_blank" style="display:inline-block; background:#00d4ff; color:#000; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:0.9em;">Read Full Article →</a>
-      </div>
+        <div class="card-tap">TAP TO READ</div>
+      </div>`;
+    slot.querySelector('.card').onclick = () => playCard(i, art);
+    area.appendChild(slot);
+    gsap.to(slot, { opacity: 1, y: 0, duration: 0.4, delay: i * 0.1, ease: 'back.out(1.2)' });
+  });
+}
+function playCard(slotIdx, article) {
+  const cardEl = document.getElementById('card' + slotIdx);
+  if (!cardEl || cardEl.classList.contains('played')) return;
+  // Animate other cards out
+  document.querySelectorAll('.card').forEach((c, ci) => {
+    if (ci !== slotIdx) {
+      gsap.to(c.parentElement, { opacity: 0.2, scale: 0.95, duration: 0.3 });
+      c.style.pointerEvents = 'none';
+    }
+  });
+  // Play animation
+  gsap.to(cardEl, {
+    y: -100, scale: 0.7, opacity: 0, duration: 0.5,
+    ease: 'power2.in',
+    onComplete: () => {
+      state.poolIndex++;
+      state.readCount++;
+      state.currentStreak++;
+      if (state.currentStreak > state.bestStreak) state.bestStreak = state.currentStreak;
+      updateTotalRead();
+      showArticle(article);
+      if (state.poolIndex >= state.articles.length || state.readCount >= 15) {
+        setTimeout(endRun, 600);
+      } else {
+        setTimeout(startHand, 800);
+      }
+    }
+  });
+}
+function skipCard(slotIdx) {
+  const cardEl = document.getElementById('card' + slotIdx);
+  if (!cardEl || cardEl.classList.contains('dismissed')) return;
+  state.currentStreak = 0;
+  gsap.to(cardEl, {
+    x: -80, opacity: 0, rotation: -12, duration: 0.4, ease: 'power2.in',
+    onComplete: () => {
+      state.poolIndex++;
+      if (state.poolIndex >= state.articles.length || state.readCount >= 15) {
+        endRun();
+      } else {
+        setTimeout(startHand, 400);
+      }
+    }
+  });
+}
+function showArticle(article) {
+  const d = document.getElementById('dialogue');
+  const sourceColor = article.sourceCategoryColor || 'var(--accent)';
+  const isAIGen = article.summary && !article.summary.startsWith(article.description);
+  const aiBadge = isAIGen ? '<span class="dialogue-ai-badge">AI SUMMARY</span>' : '<span class="dialogue-ai-badge">BRAVE</span>';
+  const summary = article.summary || article.description || '';
+  d.innerHTML = `
+    <div class="dialogue-source">
+      <span style="width:8px;height:8px;border-radius:50%;background:${sourceColor};flex-shrink:0"></span>
+      ${escHtml(article.source || '')}
+      <span class="dialogue-time">${escHtml(article.time || '')}</span>
+      ${aiBadge}
     </div>
+    <div class="dialogue-headline">${escHtml(article.headline || article.title || '')}</div>
+    <div class="dialogue-summary" id="summaryText"></div>
+    <a class="dialogue-link" href="${escAttr(article.url || '#')}" target="_blank" rel="noopener">
+      READ FULL ARTICLE
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </a>`;
+  typewriter(document.getElementById('summaryText'), summary, 25);
+}
+function typewriter(el, text, speed) {
+  if (state.typingInterval) clearInterval(state.typingInterval);
+  let i = 0;
+  el.innerHTML = '<span class="cursor">_</span>';
+  state.typingInterval = setInterval(() => {
+    if (i >= text.length) {
+      clearInterval(state.typingInterval);
+      state.typingInterval = null;
+      el.innerHTML = escHtml(text);
+      return;
+    }
+    i++;
+    el.innerHTML = escHtml(text.slice(0, i)) + '<span class="cursor">_</span>';
+  }, speed);
+}
+function setDialogue(html) {
+  if (state.typingInterval) { clearInterval(state.typingInterval); state.typingInterval = null; }
+  document.getElementById('dialogue').innerHTML = html;
+}
 
+// ── End Run ──────────────────────────────────────────────────
+function endRun() {
+  state.runComplete = true;
+  const elapsed = Math.floor((Date.now() - state.runStartTime) / 1000);
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  document.getElementById('completeCat').textContent = CAT_NAMES[state.currentCat] + ' · ' + CAT_NAMES[state.currentCat];
+  document.getElementById('completeCat').style.color = `var(--cat-${['tech','world','business','sports','science','entertainment','health','lucky'][state.currentCat-1]})`;
+  document.getElementById('completeArticles').textContent = state.readCount;
+  document.getElementById('completeTime').textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
+  document.getElementById('completeStreak').textContent = state.bestStreak;
+  showScreen('completeScreen');
+  // Animate
+  gsap.from('.complete-stat', { opacity: 0, y: 20, stagger: 0.1, duration: 0.5, ease: 'power2.out' });
+}
+function startNewRun() {
+  startRun(state.currentCat);
+}
+
+// ── Loading ───────────────────────────────────────────────────
+function showLoading(msg) {
+  document.getElementById('loadingMsg').textContent = msg;
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+function hideLoading() {
+  setTimeout(() => document.getElementById('loadingOverlay').classList.add('hidden'), 300);
+}
+
+// ── Utilities ────────────────────────────────────────────────
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  if (!s) return '';
+  return String(s).replace(/"/g, '&quot;');
+}
+
+// ── Keyboard Shortcuts ────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (document.getElementById('loadingOverlay').classList.contains('hidden') === false) return;
+  const activeScreen = document.querySelector('.screen.active');
+  if (!activeScreen) return;
+  if (activeScreen.id === 'cardScreen') {
+    if (e.code === 'Digit1' || e.code === 'Numpad1') {
+      const c = document.getElementById('card0');
+      if (c && !c.classList.contains('played')) { const cards = document.querySelectorAll('.card'); if (cards[0]) cards[0].click(); }
+    }
+    if (e.code === 'Digit2' || e.code === 'Numpad2') {
+      const c = document.getElementById('card1');
+      if (c && !c.classList.contains('played')) { const cards = document.querySelectorAll('.card'); if (cards[1]) cards[1].click(); }
+    }
+    if (e.code === 'Digit3' || e.code === 'Numpad3') {
+      const c = document.getElementById('card2');
+      if (c && !c.classList.contains('played')) { const cards = document.querySelectorAll('.card'); if (cards[2]) cards[2].click(); }
+    }
+    if (e.code === 'Space') {
+      e.preventDefault();
+      const c = document.getElementById('card0');
+      if (c && !c.classList.contains('dismissed')) skipCard(0);
+    }
+    if (e.code === 'Escape') goBack();
+  } else if (activeScreen.id === 'completeScreen') {
+    if (e.code === 'Enter' || e.code === 'Space') startNewRun();
+    if (e.code === 'Escape') goHome();
+  }
+});
+
+// ── Back Button ───────────────────────────────────────────────
+document.getElementById('backBtn').addEventListener('click', goBack);
+
+// ── Init ──────────────────────────────────────────────────────
+buildCatGrid();
+updateTopBar();
+hideLoading();
+</script>
 </body>
 </html>
