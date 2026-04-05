@@ -49,17 +49,17 @@ body{background:var(--bg);background-image:radial-gradient(circle at 1px 1px,rgb
    ═══════════════════════════════════════ */
 #selectScreen{align-items:center;justify-content:flex-start;padding:40px 16px 24px;gap:24px;overflow-y:auto}
 .select-header{text-align:center}
-.select-title{font-family:var(--font-mono);font-size:clamp(18px,5vw,28px);font-weight:700;letter-spacing:4px;color:var(--text);text-transform:uppercase;margin-bottom:6px}
-.select-sub{font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase}
-.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:640px;width:100%}
-.cat-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:16px 12px;cursor:pointer;transition:all .18s cubic-bezier(0.2,0.8,0.2,1);display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;overflow:hidden}
-.cat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--cat-color,var(--accent));opacity:0.85}
-.cat-card:hover{background:var(--surface-hi);border-color:var(--cat-color,var(--accent));transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+.select-title{font-family:var(--font-mono);font-size:clamp(16px,5vw,26px);font-weight:700;letter-spacing:4px;color:#ffffff;text-transform:uppercase;margin-bottom:6px;text-shadow:0 2px 8px rgba(0,0,0,0.9)}
+.select-sub{font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:#999999;text-transform:uppercase}
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:640px;width:100%;padding:0 4px}
+.cat-card{background:#1e1e1e;border:2px solid #3a3a3a;border-radius:8px;padding:18px 12px 14px;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.4)}
+.cat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--cat-color,var(--accent));opacity:0.9}
+.cat-card:hover{background:#2a2a2a;border-color:var(--cat-color,var(--accent));transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.5)}
 .cat-card:hover::before{opacity:1}
 .cat-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center}
 .cat-icon svg{width:24px;height:24px}
-.cat-name{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text);text-transform:uppercase;text-align:center}
-.cat-desc{font-size:10px;color:var(--text-dim);text-align:center;line-height:1.4}
+.cat-name{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:2px;color:#ffffff;text-transform:uppercase;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,0.8)}
+.cat-desc{font-size:10px;color:#888888;text-align:center;line-height:1.4}
 .cat-card.lucky{grid-column:span 2}
 .bottom-stats{display:flex;gap:24px;justify-content:center;padding:16px}
 .bottom-stat{font-family:var(--font-mono);font-size:10px;color:var(--text-dim)}
@@ -381,7 +381,7 @@ function buildCatGrid() {
     card.innerHTML = `<div class="cat-icon">${CAT_ICONS[i]}</div><div class="cat-name">${CAT_NAMES[i]}</div><div class="cat-desc">${CAT_DESCS[i]}</div>`;
     card.onclick = () => startRun(i);
     grid.appendChild(card);
-    gsap.from(card, { opacity: 0, y: 20, duration: 0.4, delay: (i - 1) * 0.06, ease: 'power2.out' });
+    gsap.from(card, { opacity: 0, duration: 0.01 });
   }
 }
 
