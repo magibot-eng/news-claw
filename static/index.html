@@ -10,8 +10,8 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 :root{
---bg:#080808;--surface:#0e0e0e;--surface-hi:#161616;--border:#1e1e1e;
---text:#e8e4dc;--text-dim:#4a4a4a;--accent:#00c8e0;
+--bg:#080808;--surface:#1a1a1a;--surface-hi:#222222;--border:#2e2e2e;
+--text:#e8e4dc;--text-dim:#6a6a6a;--accent:#00c8e0;
 --accent-dim:rgba(0,200,224,0.1);--accent-glow:rgba(0,200,224,0.2);
 --green:#3ddc84;--amber:#ffb020;--red:#ff4757;--blue:#4a9eff;
 --pink:#f472b6;--violet:#a78bfa;--emerald:#34d399;
@@ -47,13 +47,13 @@ body{background:var(--bg);background-image:radial-gradient(circle at 1px 1px,rgb
 /* ═══════════════════════════════════════
    CATEGORY SELECT SCREEN
    ═══════════════════════════════════════ */
-#selectScreen{align-items:center;justify-content:center;padding:24px 16px;gap:32px;overflow-y:auto}
+#selectScreen{align-items:center;justify-content:flex-start;padding:40px 16px 24px;gap:24px;overflow-y:auto}
 .select-header{text-align:center}
 .select-title{font-family:var(--font-mono);font-size:clamp(18px,5vw,28px);font-weight:700;letter-spacing:4px;color:var(--text);text-transform:uppercase;margin-bottom:6px}
 .select-sub{font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase}
 .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:640px;width:100%}
-.cat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 12px;cursor:pointer;transition:all .18s cubic-bezier(0.2,0.8,0.2,1);display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;overflow:hidden}
-.cat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--cat-color,var(--accent));opacity:0.7}
+.cat-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:16px 12px;cursor:pointer;transition:all .18s cubic-bezier(0.2,0.8,0.2,1);display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;overflow:hidden}
+.cat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--cat-color,var(--accent));opacity:0.85}
 .cat-card:hover{background:var(--surface-hi);border-color:var(--cat-color,var(--accent));transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.4)}
 .cat-card:hover::before{opacity:1}
 .cat-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center}
