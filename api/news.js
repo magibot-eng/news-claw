@@ -14,60 +14,136 @@ const CATEGORY_COLORS = {
   8: '#ffd700', // I Feel Lucky
 };
 
-// ── Gemini LLM Summarization via REST API ──────────────────────────────────────
+// ── LLM Summarization (Grok primary, Cerebras fallback, Brave fallback) ─────────
 async function generateSummary(article) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const rawDesc = article.description || article.snippet || '';
+  const rawDesc = (article.description || article.snippet || '').trim();
   if (!rawDesc) return '';
 
-  if (!apiKey) {
-    return rewriteSummary(rawDesc);
+  // Try Grok first
+  const grokKey = process.env.GROK_API_KEY;
+  if (grokKey) {
+    try {
+      const text = await callGrok(grokKey, article.title || article.headline || '', rawDesc);
+      if (text) return text;
+    } catch (err) {
+      console.error('Grok failed:', err.message);
+    }
   }
 
-  try {
-    const prompt = `You are a news editor. Write a detailed summary (2-4 paragraphs) covering:
-1. What happened (the main facts)
-2. Why it matters (the significance)
-3. Key details worth knowing
+  // Try Cerebras second
+  const cerebrasKey = process.env.CEREBRAS_API_KEY;
+  if (cerebrasKey) {
+    try {
+      const text = await callCerebras(cerebrasKey, article.title || article.headline || '', rawDesc);
+      if (text) return text;
+    } catch (err) {
+      console.error('Cerebras failed:', err.message);
+    }
+  }
 
-Write in an engaging, informative style. Do not be vague.
+  // Fallback: clean Brave description
+  return braveFallback(rawDesc);
+}
 
-Title: ${article.title || article.headline || ''}
-${rawDesc}
+async function callGrok(apiKey, title, description) {
+  const prompt = `Summarize the following news article in 2-3 clear, informative sentences. Focus on what happened, why it matters, and the key facts. Write in active voice. Do not be vague or use filler phrases like "according to reports."
+
+Title: ${title}
+
+${description}
 
 Summary:`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 512, temperature: 0.7 }
-        })
-      }
-    );
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'grok-3-beta',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 256,
+        temperature: 0.3,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('Gemini API error:', response.status, errText);
-      return rewriteSummary(rawDesc);
+      console.error('Grok API error:', response.status, errText);
+      return null;
     }
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    return text?.trim() || rewriteSummary(rawDesc);
+    const text = data.choices?.[0]?.message?.content?.trim();
+    return text || null;
   } catch (err) {
-    console.error('Gemini fetch failed:', err.message);
-    return rewriteSummary(rawDesc);
+    clearTimeout(timeout);
+    if (err.name === 'AbortError') {
+      console.error('Grok timed out');
+    }
+    throw err;
   }
 }
 
-function rewriteSummary(raw) {
+async function callCerebras(apiKey, title, description) {
+  const prompt = `Summarize the following news article in 2-3 clear, informative sentences. Focus on what happened, why it matters, and key facts. Write in active voice.
+
+Title: ${title}
+
+${description}
+
+Summary:`;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch('https://api.cerebras.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 256,
+        temperature: 0.3,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Cerebras API error:', response.status, errText);
+      return null;
+    }
+
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content?.trim();
+    return text || null;
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === 'AbortError') {
+      console.error('Cerebras timed out');
+    }
+    throw err;
+  }
+}
+
+function braveFallback(raw) {
   const s = raw.trim();
   if (!s) return '';
-  // If short, return as-is; if long, clean up trailing word
   return s.length > 600 ? s.substring(0, 600).replace(/\s+\S*$/, '') + '...' : s;
 }
 
