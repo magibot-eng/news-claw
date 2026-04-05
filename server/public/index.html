@@ -459,7 +459,7 @@ function buildCards() {
       </div>`;
     slot.querySelector('.card').onclick = () => playCard(i, art);
     area.appendChild(slot);
-    gsap.from(slot, { opacity: 0, y: 20, duration: 0.3, delay: i * 0.08, ease: 'back.out(1)' });
+    gsap.to(slot, { opacity: 1, y: 0, duration: 0.3, delay: i * 0.08, ease: 'back.out(1)' });
   });
 }
 function playCard(slotIdx, article) {
