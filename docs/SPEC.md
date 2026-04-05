@@ -149,23 +149,25 @@ Every animation communicates game state:
 
 ### Core Loop
 1. Land on category screen, pick a category
-2. 15 articles fetched — 3 dealt as cards at a time
-3. Tap card → LLM summary appears in dialogue box, card dissolves
-4. After 5 cards (15 articles) → run complete
+2. 15 articles fetched from Brave Search API — dealt 3 at a time
+3. Tap card → summary appears in dialogue box with typewriter effect, card animates out
+4. After reading 15 articles (any combination of play/skip) → run complete
 5. Stats updated in localStorage
 
-### Summary Generation (KEY UPGRADE)
-- **Primary:** Free LLM API — target: Grok (`x.ai`), Cerebras, or HuggingFace Inference API
-- **Fallback:** Brave description snippets if LLM fails
-- **Prompt:** "Summarize this article in 2-3 sentences as if for a sophisticated general news reader. Focus on the key facts and why they matter. Write in active voice."
-- **Timeout:** 5 seconds — if LLM doesn't respond, fall back to Brave description
-- **Cache:** LLM summaries cached in Vercel (same 8h TTL as current)
+**Card pool logic (important):**
+- Pool advances by 1 per card played or skipped
+- The other 2 cards in the current hand remain in the pool for future hands
+- Dialogue box is NOT cleared between cards — article stays readable while new hand deals
+- Only cleared on first load of a new run
+
+### Summary Generation
+- **Brave Search API** — returns article snippets and descriptions
+- **AI Badge** — if article has a `summary` field that differs from its `description`, shows "AI SUMMARY" badge
+- Brave description used as fallback when no summary available
 
 ### Card Interactions
 - **Tap card:** Play it — fly animation, particle burst, summary types out
-- **Skip button on card:** "Skip" label appears on hover → discards card without playing
-- **Swipe left on mobile:** Skip card
-- **Long-press on mobile:** Show article URL without playing
+- **Skip button on card:** Discards card without playing, resets streak
 - **Hover (desktop):** Card lifts, shows "TAP TO READ" overlay in category color
 
 ### Reading Stats (Gamification)
@@ -179,8 +181,9 @@ Every animation communicates game state:
 - **Keyboard:** 1/2/3 keys to play cards, Space to skip
 
 ### I Feel Lucky
-- Fetches 2 articles from each category (14 total), randomizes, takes 15
+- Fetches articles across all 8 categories (up to 15 total), randomized
 - Card borders show original category color
+- Works like a normal run — read or skip any card
 
 ### Error Handling
 - **LLM timeout:** Falls back to Brave description silently, shows small "AI summary unavailable" badge

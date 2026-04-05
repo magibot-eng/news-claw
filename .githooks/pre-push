@@ -1,0 +1,52 @@
+#!/bin/bash
+#
+# pre-push hook: Require SPEC.md or CHANGELOG.md update when .html/.js files change
+#
+
+# Get the names of files being pushed
+while read local_ref local_sha remote_ref remote_sha; do
+  :
+done
+
+# Get list of changed files between local and remote
+changed_files=$(git diff --name-only "$remote_sha..$local_sha" 2>/dev/null)
+
+if [ -z "$changed_files" ]; then
+  exit 0
+fi
+
+# Check if any .html or .js files changed
+code_files=$(echo "$changed_files" | grep -E '\.(html|js)$' || true)
+if [ -z "$code_files" ]; then
+  exit 0
+fi
+
+# Check if SPEC.md or CHANGELOG.md also changed
+doc_files=$(echo "$changed_files" | grep -E '^(SPEC|CHANGELOG|docs/|\.md$)' || true)
+if [ -n "$doc_files" ]; then
+  echo ""
+  echo "✓ Docs updated alongside code — looks good!"
+  exit 0
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  PRE-PUSH HOOK: Documentation required"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "  You are pushing code changes:"
+echo ""
+echo "$code_files" | while read f; do echo "    • $f"; done
+echo ""
+echo "  But no documentation update detected."
+echo ""
+echo "  Add a spec/doc update to your commit:"
+echo ""
+echo "    git add docs/SPEC.md   # or CHANGELOG.md"
+echo "    git commit --amend --no-edit"
+echo "    git push"
+echo ""
+echo "  Or skip this check with: git push --no-verify"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+exit 1
