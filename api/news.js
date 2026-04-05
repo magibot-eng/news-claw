@@ -1,8 +1,6 @@
 // In-memory cache with 8-hour TTL
 const cache = new Map();
-const summaryCache = new Map(); // per-article summary cache, keyed by URL hash
-
-const CACHE_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
+const CACHE_TTL_MS = 8 * 60 * 60 * 1000;
 
 const CATEGORY_COLORS = {
   1: '#00c8e0', // Tech
@@ -15,160 +13,20 @@ const CATEGORY_COLORS = {
   8: '#00c8e0', // I Feel Lucky
 };
 
-const SUMMARY_PROMPT = "Summarize this article in 2-3 sentences as if for a sophisticated general news reader. Focus on the key facts and why they matter. Write in active voice.";
-
-// ── Per-article summary cache helpers ──────────────────────────────────────
-function getSummaryCacheEntry(url) {
-  const key = hashUrl(url);
-  const entry = summaryCache.get(key);
-  if (!entry) return null;
-  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
-    summaryCache.delete(key);
-    return null;
-  }
-  return entry.summary;
+// ── Brave description — used as-is (no LLM needed) ────────────────────────────
+function generateSummary(article) {
+  // Return Brave description directly — no LLM required
+  const raw = (article.description || article.snippet || '').trim();
+  if (!raw) return '';
+  return raw.length > 600 ? raw.substring(0, 600).replace(/\s+\S*$/, '') + '...' : raw;
 }
 
-function setSummaryCacheEntry(url, summary) {
-  const key = hashUrl(url);
-  summaryCache.set(key, { summary, timestamp: Date.now() });
-}
-
-function hashUrl(url) {
-  let hash = 0;
-  for (let i = 0; i < url.length; i++) {
-    const char = url.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return String(hash);
-}
-
-// ── Fetch with 5s timeout ────────────────────────────────────────────────────
-function fetchWithTimeout(url, options, timeoutMs = 5000) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  return fetch(url, { ...options, signal: controller.signal })
-    .finally(() => clearTimeout(timeout));
-}
-
-// ── Grok/Cerebras LLM Summarization ─────────────────────────────────────────
-async function generateSummary(article) {
-  const rawDesc = article.description || article.snippet || '';
-  if (!rawDesc) return '';
-
-  // Check per-article summary cache first
-  const cached = getSummaryCacheEntry(article.url);
-  if (cached) return cached;
-
-  const grokKey = process.env.GROK_API_KEY;
-  const cerebrasKey = process.env.CEREBRAS_API_KEY;
-
-  if (!grokKey && !cerebrasKey) {
-    const fallback = rewriteSummary(rawDesc);
-    return fallback ? `${fallback} [AI summary unavailable]` : '';
-  }
-
-  // Try Grok first
-  if (grokKey) {
-    try {
-      const prompt = `${SUMMARY_PROMPT}\n\nTitle: ${article.title || article.headline || ''}\n${rawDesc}`;
-      const response = await fetchWithTimeout(
-        'https://api.x.ai/v1/chat/completions',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${grokKey}`,
-          },
-          body: JSON.stringify({
-            model: 'grok-2',
-            messages: [{ role: 'user', content: prompt }],
-            max_tokens: 200,
-            temperature: 0.7,
-          }),
-        },
-        5000
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const text = data.choices?.[0]?.message?.content?.trim();
-        if (text) {
-          setSummaryCacheEntry(article.url, text);
-          return text;
-        }
-      } else {
-        console.error('Grok API error:', response.status, await response.text());
-      }
-    } catch (err) {
-      console.error('Grok fetch failed:', err.message);
-    }
-  }
-
-  // Fallback to Cerebras
-  if (cerebrasKey) {
-    try {
-      const prompt = `${SUMMARY_PROMPT}\n\nTitle: ${article.title || article.headline || ''}\n${rawDesc}`;
-      const response = await fetchWithTimeout(
-        'https://api.cerebras.ai/v1/chat/completions',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${cerebrasKey}`,
-          },
-          body: JSON.stringify({
-            model: 'llama-3.3-70b',
-            messages: [{ role: 'user', content: prompt }],
-            max_tokens: 200,
-            temperature: 0.7,
-          }),
-        },
-        5000
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const text = data.choices?.[0]?.message?.content?.trim();
-        if (text) {
-          setSummaryCacheEntry(article.url, text);
-          return text;
-        }
-      } else {
-        console.error('Cerebras API error:', response.status, await response.text());
-      }
-    } catch (err) {
-      console.error('Cerebras fetch failed:', err.message);
-    }
-  }
-
-  // Both failed or timed out — use Brave description with badge
-  const fallback = rewriteSummary(rawDesc);
-  return fallback ? `${fallback} [AI summary unavailable]` : '';
-}
-
-// ── Fallback rewrite for Brave descriptions ─────────────────────────────────
-function rewriteSummary(raw) {
-  const s = raw.trim();
-  if (!s) return '';
-  return s.length > 600 ? s.substring(0, 600).replace(/\s+\S*$/, '') + '...' : s;
-}
-
-// ── Parallel fetch with max 5 concurrent LLM calls ──────────────────────────
-async function fetchSummariesBatch(articles) {
-  const results = [];
-  for (let i = 0; i < articles.length; i += 5) {
-    const batch = articles.slice(i, i + 5);
-    const batchResults = await Promise.all(
-      batch.map(async (article) => {
-        const summary = await generateSummary(article);
-        return { ...article, summary: `${summary}\n\nSource: ${article.url}` };
-      })
-    );
-    results.push(...batchResults);
-  }
-  return results;
+// ── Map articles to enriched form with summary ────────────────────────────────
+function enrichArticles(articles) {
+  return articles.map(article => ({
+    ...article,
+    summary: `${generateSummary(article)}\n\nSource: ${article.url}`,
+  }));
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
@@ -244,7 +102,7 @@ module.exports = async (req, res) => {
       };
     });
 
-    const summarizedArticles = await fetchSummariesBatch(articles);
+    const summarizedArticles = enrichArticles(articles);
 
     cache.set(cacheKey, { data: summarizedArticles, timestamp: Date.now() });
     return res.json(summarizedArticles);
@@ -288,7 +146,7 @@ module.exports = async (req, res) => {
       };
     });
 
-    const summarizedArticles = await fetchSummariesBatch(articles);
+    const summarizedArticles = enrichArticles(articles);
 
     cache.set(cacheKey, { data: summarizedArticles, timestamp: Date.now() });
     console.log(`Cached ${summarizedArticles.length} articles for category ${category}`);
