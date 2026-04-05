@@ -1,150 +1,174 @@
 // In-memory cache with 8-hour TTL
 const cache = new Map();
+const summaryCache = new Map(); // per-article summary cache, keyed by URL hash
 
 const CACHE_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
 
 const CATEGORY_COLORS = {
-  1: '#00d4ff', // Tech
+  1: '#00c8e0', // Tech
   2: '#ff6b6b', // World
-  3: '#ffd700', // Business
-  4: '#2ecc71', // Sports
-  5: '#9b59b6', // Science
-  6: '#e91e63', // Entertainment
-  7: '#00bfa5', // Health
-  8: '#ffd700', // I Feel Lucky
+  3: '#ffb020', // Business
+  4: '#3ddc84', // Sports
+  5: '#a78bfa', // Science
+  6: '#f472b6', // Entertainment
+  7: '#34d399', // Health
+  8: '#00c8e0', // I Feel Lucky
 };
 
-// ── LLM Summarization (Grok primary, Cerebras fallback, Brave fallback) ─────────
+const SUMMARY_PROMPT = "Summarize this article in 2-3 sentences as if for a sophisticated general news reader. Focus on the key facts and why they matter. Write in active voice.";
+
+// ── Per-article summary cache helpers ──────────────────────────────────────
+function getSummaryCacheEntry(url) {
+  const key = hashUrl(url);
+  const entry = summaryCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    summaryCache.delete(key);
+    return null;
+  }
+  return entry.summary;
+}
+
+function setSummaryCacheEntry(url, summary) {
+  const key = hashUrl(url);
+  summaryCache.set(key, { summary, timestamp: Date.now() });
+}
+
+function hashUrl(url) {
+  let hash = 0;
+  for (let i = 0; i < url.length; i++) {
+    const char = url.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return String(hash);
+}
+
+// ── Fetch with 5s timeout ────────────────────────────────────────────────────
+function fetchWithTimeout(url, options, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(timeout));
+}
+
+// ── Grok/Cerebras LLM Summarization ─────────────────────────────────────────
 async function generateSummary(article) {
-  const rawDesc = (article.description || article.snippet || '').trim();
+  const rawDesc = article.description || article.snippet || '';
   if (!rawDesc) return '';
 
-  // Try Grok first
+  // Check per-article summary cache first
+  const cached = getSummaryCacheEntry(article.url);
+  if (cached) return cached;
+
   const grokKey = process.env.GROK_API_KEY;
+  const cerebrasKey = process.env.CEREBRAS_API_KEY;
+
+  if (!grokKey && !cerebrasKey) {
+    const fallback = rewriteSummary(rawDesc);
+    return fallback ? `${fallback} [AI summary unavailable]` : '';
+  }
+
+  // Try Grok first
   if (grokKey) {
     try {
-      const text = await callGrok(grokKey, article.title || article.headline || '', rawDesc);
-      if (text) return text;
+      const prompt = `${SUMMARY_PROMPT}\n\nTitle: ${article.title || article.headline || ''}\n${rawDesc}`;
+      const response = await fetchWithTimeout(
+        'https://api.x.ai/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${grokKey}`,
+          },
+          body: JSON.stringify({
+            model: 'grok-2',
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 200,
+            temperature: 0.7,
+          }),
+        },
+        5000
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content?.trim();
+        if (text) {
+          setSummaryCacheEntry(article.url, text);
+          return text;
+        }
+      } else {
+        console.error('Grok API error:', response.status, await response.text());
+      }
     } catch (err) {
-      console.error('Grok failed:', err.message);
+      console.error('Grok fetch failed:', err.message);
     }
   }
 
-  // Try Cerebras second
-  const cerebrasKey = process.env.CEREBRAS_API_KEY;
+  // Fallback to Cerebras
   if (cerebrasKey) {
     try {
-      const text = await callCerebras(cerebrasKey, article.title || article.headline || '', rawDesc);
-      if (text) return text;
+      const prompt = `${SUMMARY_PROMPT}\n\nTitle: ${article.title || article.headline || ''}\n${rawDesc}`;
+      const response = await fetchWithTimeout(
+        'https://api.cerebras.ai/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${cerebrasKey}`,
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b',
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 200,
+            temperature: 0.7,
+          }),
+        },
+        5000
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content?.trim();
+        if (text) {
+          setSummaryCacheEntry(article.url, text);
+          return text;
+        }
+      } else {
+        console.error('Cerebras API error:', response.status, await response.text());
+      }
     } catch (err) {
-      console.error('Cerebras failed:', err.message);
+      console.error('Cerebras fetch failed:', err.message);
     }
   }
 
-  // Fallback: clean Brave description
-  return braveFallback(rawDesc);
+  // Both failed or timed out — use Brave description with badge
+  const fallback = rewriteSummary(rawDesc);
+  return fallback ? `${fallback} [AI summary unavailable]` : '';
 }
 
-async function callGrok(apiKey, title, description) {
-  const prompt = `Summarize the following news article in 2-3 clear, informative sentences. Focus on what happened, why it matters, and the key facts. Write in active voice. Do not be vague or use filler phrases like "according to reports."
-
-Title: ${title}
-
-${description}
-
-Summary:`;
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
-
-  try {
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'grok-3-beta',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 256,
-        temperature: 0.3,
-      }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('Grok API error:', response.status, errText);
-      return null;
-    }
-
-    const data = await response.json();
-    const text = data.choices?.[0]?.message?.content?.trim();
-    return text || null;
-  } catch (err) {
-    clearTimeout(timeout);
-    if (err.name === 'AbortError') {
-      console.error('Grok timed out');
-    }
-    throw err;
-  }
-}
-
-async function callCerebras(apiKey, title, description) {
-  const prompt = `Summarize the following news article in 2-3 clear, informative sentences. Focus on what happened, why it matters, and key facts. Write in active voice.
-
-Title: ${title}
-
-${description}
-
-Summary:`;
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
-
-  try {
-    const response = await fetch('https://api.cerebras.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 256,
-        temperature: 0.3,
-      }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('Cerebras API error:', response.status, errText);
-      return null;
-    }
-
-    const data = await response.json();
-    const text = data.choices?.[0]?.message?.content?.trim();
-    return text || null;
-  } catch (err) {
-    clearTimeout(timeout);
-    if (err.name === 'AbortError') {
-      console.error('Cerebras timed out');
-    }
-    throw err;
-  }
-}
-
-function braveFallback(raw) {
+// ── Fallback rewrite for Brave descriptions ─────────────────────────────────
+function rewriteSummary(raw) {
   const s = raw.trim();
   if (!s) return '';
   return s.length > 600 ? s.substring(0, 600).replace(/\s+\S*$/, '') + '...' : s;
+}
+
+// ── Parallel fetch with max 5 concurrent LLM calls ──────────────────────────
+async function fetchSummariesBatch(articles) {
+  const results = [];
+  for (let i = 0; i < articles.length; i += 5) {
+    const batch = articles.slice(i, i + 5);
+    const batchResults = await Promise.all(
+      batch.map(async (article) => {
+        const summary = await generateSummary(article);
+        return { ...article, summary: `${summary}\n\nSource: ${article.url}` };
+      })
+    );
+    results.push(...batchResults);
+  }
+  return results;
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
@@ -220,12 +244,7 @@ module.exports = async (req, res) => {
       };
     });
 
-    const summarizedArticles = await Promise.all(
-      articles.map(async (article) => {
-        const summary = await generateSummary(article);
-        return { ...article, summary: `${summary}\n\nSource: ${article.url}` };
-      })
-    );
+    const summarizedArticles = await fetchSummariesBatch(articles);
 
     cache.set(cacheKey, { data: summarizedArticles, timestamp: Date.now() });
     return res.json(summarizedArticles);
@@ -269,12 +288,7 @@ module.exports = async (req, res) => {
       };
     });
 
-    const summarizedArticles = await Promise.all(
-      articles.map(async (article) => {
-        const summary = await generateSummary(article);
-        return { ...article, summary: `${summary}\n\nSource: ${article.url}` };
-      })
-    );
+    const summarizedArticles = await fetchSummariesBatch(articles);
 
     cache.set(cacheKey, { data: summarizedArticles, timestamp: Date.now() });
     console.log(`Cached ${summarizedArticles.length} articles for category ${category}`);
