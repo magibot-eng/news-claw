@@ -303,18 +303,22 @@ const CAT_DESCS = {
   5:'Science discoveries and research',6:'Movies, music, and culture',
   7:'Health, medicine, and wellness',8:'Mixed from all categories'
 };
-
+// ── State ──────────────────────────────────────────────────────
 let state = {
   currentCat: null,
-  articles: [],
-  poolIndex: 0,
+  articles: [],       // full article pool
+  poolIndex: 0,       // advance by 1 per card played
+  currentHand: [],    // articles currently in hand (up to HAND_SIZE)
   readCount: 0,
   runStartTime: null,
   bestStreak: 0,
   currentStreak: 0,
   runComplete: false,
   typingInterval: null,
+  firstLoad: true,    // show "pick a card" placeholder only on first load
 };
+
+const HAND_SIZE = 3;
 
 // ── localStorage ─────────────────────────────────────────────
 function getStats() {
@@ -387,7 +391,7 @@ function buildCatGrid() {
 
 // ── Start Run ────────────────────────────────────────────────
 async function startRun(catId) {
-  state = { currentCat: catId, articles: [], poolIndex: 0, readCount: 0, runStartTime: Date.now(), bestStreak: 0, currentStreak: 0, runComplete: false, typingInterval: null };
+  state = { currentCat: catId, articles: [], poolIndex: 0, currentHand: [], readCount: 0, runStartTime: Date.now(), bestStreak: 0, currentStreak: 0, runComplete: false, typingInterval: null, firstLoad: true };
   document.getElementById('backBtn').classList.add('visible');
   showLoading('DEALING CARDS...');
   try {
@@ -413,7 +417,23 @@ function startHand() {
   const pct = (state.readCount / 15) * 100;
   document.getElementById('handBarFill').style.width = pct + '%';
   document.getElementById('handBarFill').style.background = catEl.style.color;
-  setDialogue('<div class="dialogue-empty">Pick a card to read the latest news...</div>');
+
+  // Build current hand from pool
+  const available = state.articles.length - state.poolIndex;
+  if (available === 0) { endRun(); return; }
+
+  state.currentHand = [];
+  for (let i = 0; i < Math.min(HAND_SIZE, available); i++) {
+    state.currentHand.push(state.articles[state.poolIndex + i]);
+  }
+
+  // Show dialogue placeholder only on very first load
+  if (state.firstLoad) {
+    state.firstLoad = false;
+    setDialogue('<div class="dialogue-empty">Pick a card to read the latest news...</div>');
+  }
+  // After first load, leave dialogue as-is (may still show previous article while new cards deal)
+
   showScreen('cardScreen');
   hideLoading();
   buildCards();
@@ -421,14 +441,12 @@ function startHand() {
 function buildCards() {
   const area = document.getElementById('cardsArea');
   area.innerHTML = '';
-  const chunk = state.articles.slice(state.poolIndex, state.poolIndex + 3);
-  if (chunk.length === 0) { endRun(); return; }
-  chunk.forEach((art, i) => {
+  state.currentHand.forEach((art, i) => {
     const slot = document.createElement('div');
     slot.className = 'card-slot';
     slot.style.setProperty('--cat-color', art.sourceCategoryColor || 'var(--accent)');
     slot.innerHTML = `
-      <div class="card" id="card${i}" data-idx="${state.poolIndex + i}">
+      <div class="card" id="card${i}" data-idx="${i}">
         <button class="skip-btn" onclick="event.stopPropagation(); skipCard(${i})">SKIP</button>
         <div class="card-body">
           <div class="card-headline">${escHtml(art.headline || art.title || '')}</div>
@@ -441,38 +459,48 @@ function buildCards() {
       </div>`;
     slot.querySelector('.card').onclick = () => playCard(i, art);
     area.appendChild(slot);
-    gsap.to(slot, { opacity: 1, y: 0, duration: 0.4, delay: i * 0.1, ease: 'back.out(1.2)' });
+    gsap.from(slot, { opacity: 0, y: 20, duration: 0.3, delay: i * 0.08, ease: 'back.out(1)' });
   });
 }
 function playCard(slotIdx, article) {
   const cardEl = document.getElementById('card' + slotIdx);
   if (!cardEl || cardEl.classList.contains('played')) return;
   const catColor = article.sourceCategoryColor || '#00c8e0';
+
   // Trigger particle burst
   const rect = cardEl.getBoundingClientRect();
   burst(rect.left + rect.width / 2, rect.top + rect.height / 2, catColor);
-  // Animate other cards out
+
+  // Dim other cards
   document.querySelectorAll('.card').forEach((c, ci) => {
     if (ci !== slotIdx) {
-      gsap.to(c.parentElement, { opacity: 0.2, scale: 0.95, duration: 0.3 });
+      gsap.to(c, { opacity: 0.25, duration: 0.25 });
       c.style.pointerEvents = 'none';
     }
   });
-  // Play animation
+
+  // Animate chosen card flying up
   gsap.to(cardEl, {
-    y: -100, scale: 0.7, opacity: 0, duration: 0.5,
+    y: -80, scale: 0.8, opacity: 0, duration: 0.45,
     ease: 'power2.in',
     onComplete: () => {
-      state.poolIndex++;
+      // Remove played card from hand
+      state.currentHand.splice(slotIdx, 1);
+      // Advance pool by 1 (only the played card is "spent")
+      state.poolIndex += 1;
       state.readCount++;
       state.currentStreak++;
       if (state.currentStreak > state.bestStreak) state.bestStreak = state.currentStreak;
       updateTotalRead();
+
+      // Show article — dialogue persists until next card is played
       showArticle(article);
-      if (state.poolIndex >= state.articles.length || state.readCount >= 15) {
-        setTimeout(endRun, 600);
-      } else {
+
+      // After article is readable, deal next hand
+      if (state.poolIndex < state.articles.length && state.readCount < 15) {
         setTimeout(startHand, 800);
+      } else if (state.readCount >= 15) {
+        setTimeout(endRun, 1200);
       }
     }
   });
@@ -482,9 +510,10 @@ function skipCard(slotIdx) {
   if (!cardEl || cardEl.classList.contains('dismissed')) return;
   state.currentStreak = 0;
   gsap.to(cardEl, {
-    x: -80, opacity: 0, rotation: -12, duration: 0.4, ease: 'power2.in',
+    x: -80, opacity: 0, rotation: -12, duration: 0.35, ease: 'power2.in',
     onComplete: () => {
-      state.poolIndex++;
+      state.currentHand.splice(slotIdx, 1);
+      state.poolIndex += 1;  // advance by 1, skip only the dismissed card
       if (state.poolIndex >= state.articles.length || state.readCount >= 15) {
         endRun();
       } else {
